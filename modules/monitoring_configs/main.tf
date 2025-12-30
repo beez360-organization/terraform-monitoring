@@ -19,7 +19,7 @@ data "template_file" "tempo_config" {
 
   vars = {
     storage_account_name = var.storage_account_name
-    storage_account_key  = var.storage_account_key
+    storage_account_key  = local.storage_account_key
   }
 }
 

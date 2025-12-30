@@ -1,3 +1,11 @@
+resource "azurerm_public_ip" "this" {
+  name                = "${var.vm_name}-public-ip"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+}
+
 resource "azurerm_network_interface" "nic" {
   name                = "${var.vm_name}-nic"
   location            = var.location
@@ -7,17 +15,10 @@ resource "azurerm_network_interface" "nic" {
     name                          = "${var.vm_name}-ipconfig"
     subnet_id                     = var.subnet_id
     private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.this.id
   }
 }
 
-resource "azurerm_managed_disk" "data_disk" {
-  name                 = "${var.vm_name}-data-disk"
-  location             = var.location
-  resource_group_name  = var.resource_group_name
-  storage_account_type = "Premium_LRS"
-  create_option        = "Empty"
-  disk_size_gb         = var.data_disk_size_gb
-}
 
 resource "azurerm_virtual_machine" "vm" {
   name                  = var.vm_name
@@ -26,12 +27,13 @@ resource "azurerm_virtual_machine" "vm" {
   network_interface_ids = [azurerm_network_interface.nic.id]
   vm_size               = var.vm_size
 
- storage_os_disk {
-  name              = "my-os-disk"
+storage_os_disk {
+  name              = "${var.vm_name}-os-disk"
   caching           = "ReadWrite"
-  create_option     = "FromImage"
-  managed_disk_type = "Standard_LRS"
+  create_option     = "FromImage"  
+  managed_disk_type = "Premium_LRS"
 }
+
 
 storage_image_reference {
   publisher = "Canonical"

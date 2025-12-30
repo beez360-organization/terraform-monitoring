@@ -18,6 +18,8 @@ resource "azurerm_resource_group" "rg" {
 }
 
 
+
+
 module "network" {
   source = "./modules/network"
 

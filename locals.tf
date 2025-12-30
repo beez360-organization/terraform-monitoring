@@ -4,3 +4,7 @@ locals {
   }
 }
 
+locals {
+  storage_account_key = module.storage.primary_access_key
+}
+

@@ -22,3 +22,9 @@ output "vm_logs_traces_ip" {
   description = "IP privée de la VM Logs/Traces"
   value       = module.vm_logs_traces.private_ip
 }
+
+output "primary_storage_key" {
+  description = "Clé primaire du compte de stockage"
+  value       = local.storage_account_key
+  sensitive   = true
+}

@@ -11,6 +11,10 @@ output "logs_container_name" {
   value = azurerm_storage_container.logs.name
 }
 
+output "storage_account_id" {
+  value = azurerm_storage_account.this.id
+}
+
 output "traces_container_name" {
   value = azurerm_storage_container.traces.name
 }

@@ -9,6 +9,7 @@ storage:
       account_name: "${storage_account_name}"
       account_key: "${storage_account_key}"
 
+
   index:
     prefix: "tempo_index_"
     period: 24h
@@ -17,6 +18,7 @@ storage:
       container: "tempo-index"
       account_name: "${storage_account_name}"
       account_key: "${storage_account_key}"
+
 
 sampling:
   default_strategy:

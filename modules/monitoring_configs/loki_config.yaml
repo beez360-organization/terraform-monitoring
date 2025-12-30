@@ -25,8 +25,8 @@ schema_config:
 storage_config:
   azure:
     container_name: "loki-logs"
-    account_name: "<YOUR_STORAGE_ACCOUNT>"
-    account_key: "<YOUR_STORAGE_KEY>"
+    account_name: "${var.storage_account_name}"
+    account_key: "${data.azurerm_storage_account_keys.storage_keys.keys[0].value}"
 
 limits_config:
   enforce_metric_name: false

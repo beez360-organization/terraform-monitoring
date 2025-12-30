@@ -65,7 +65,7 @@ variable "storage_account_name" {
 variable "vm_size" {
   description = "Taille des machines virtuelles"
   type        = string
-  default     = "Standard_B2s"
+  default     = "Standard_B1s"
 }
 
 variable "data_disk_size_gb" {
