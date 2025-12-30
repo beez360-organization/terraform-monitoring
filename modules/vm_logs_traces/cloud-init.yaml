@@ -1,0 +1,96 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+packages:
+  - wget
+  - curl
+  - tar
+  - systemd
+
+write_files:
+  - path: /etc/systemd/system/loki.service
+    content: |
+      [Unit]
+      Description=Loki Service
+      Wants=network-online.target
+      After=network-online.target
+
+      [Service]
+      User=root
+      ExecStart=/usr/local/bin/loki -config.file=/etc/loki/local-config.yaml
+      Restart=always
+
+      [Install]
+      WantedBy=multi-user.target
+
+  - path: /etc/loki/local-config.yaml
+    content: |
+      auth_enabled: false
+      server:
+        http_listen_port: 3100
+      storage_config:
+        boltdb:
+          directory: /tmp/loki/index
+        filesystem:
+          directory: /tmp/loki/chunks
+      schema_config:
+        configs:
+          - from: 2020-10-15
+            store: boltdb
+            object_store: filesystem
+            schema: v11
+            index:
+              prefix: index_
+              period: 168h
+
+  - path: /etc/systemd/system/tempo.service
+    content: |
+      [Unit]
+      Description=Tempo Service
+      Wants=network-online.target
+      After=network-online.target
+
+      [Service]
+      User=root
+      ExecStart=/usr/local/bin/tempo -config.file=/etc/tempo/local-config.yaml
+      Restart=always
+
+      [Install]
+      WantedBy=multi-user.target
+
+  - path: /etc/tempo/local-config.yaml
+    content: |
+      server:
+        http_listen_port: 3200
+      distributor:
+        receivers:
+          jaeger:
+            protocols:
+              grpc:
+              thrift_http:
+              thrift_binary:
+              thrift_compact:
+      storage:
+        trace:
+          backend: local
+          local:
+            path: /tmp/tempo/traces
+
+runcmd:
+  - curl -s https://api.github.com/repos/grafana/loki/releases/latest | grep browser_download_url | grep linux-amd64.zip | cut -d '"' -f 4 | wget -i -
+  - unzip loki-*-linux-amd64.zip
+  - cp loki-linux-amd64 /usr/local/bin/loki
+  - mkdir -p /etc/loki /tmp/loki/index /tmp/loki/chunks
+  - chmod a+x /usr/local/bin/loki
+  - systemctl daemon-reload
+  - systemctl enable loki
+  - systemctl start loki
+
+  - curl -s https://api.github.com/repos/grafana/tempo/releases/latest | grep browser_download_url | grep linux-amd64.zip | cut -d '"' -f 4 | wget -i -
+  - unzip tempo-*-linux-amd64.zip
+  - cp tempo-linux-amd64 /usr/local/bin/tempo
+  - mkdir -p /etc/tempo /tmp/tempo/traces
+  - chmod a+x /usr/local/bin/tempo
+  - systemctl daemon-reload
+  - systemctl enable tempo
+  - systemctl start tempo
