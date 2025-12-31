@@ -1,8 +1,9 @@
-variable "storage_account_name" {
-  type = string
+
+
+output "loki_config" {
+  value = data.template_file.loki_config.rendered
 }
 
-variable "storage_account_key" {
-  type      = string
-  sensitive = true
+output "tempo_config" {
+  value = data.template_file.tempo_config.rendered
 }

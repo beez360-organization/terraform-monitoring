@@ -9,3 +9,7 @@ output "private_ip" {
 output "public_ip_address" {
   value = azurerm_public_ip.this.ip_address
 }
+
+output "grafana_url" {
+  value = "http://${azurerm_public_ip.this.ip_address}:3000"
+}

@@ -56,7 +56,11 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
-
+variable "grafana_api_key" {
+  description = "API Key for Grafana to import dashboards"
+  type        = string
+  sensitive   = true
+}
 variable "storage_account_name" {
   description = "Nom du compte de stockage"
   type        = string

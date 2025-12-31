@@ -19,6 +19,9 @@ write_files:
       User=root
       ExecStart=/usr/local/bin/loki -config.file=/etc/loki/local-config.yaml
       Restart=always
+      StandardOutput=journal
+      StandardError=journal
+
 
       [Install]
       WantedBy=multi-user.target

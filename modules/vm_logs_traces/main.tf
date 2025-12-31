@@ -51,6 +51,18 @@ resource "azurerm_network_security_group" "nsg" {
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
+    # Autorise SSH
+  security_rule {
+    name                       = "AllowSSH"
+    priority                   = 140
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "22"
+    source_address_prefix      = "*" # À restreindre idéalement à IPs des VMs
+    destination_address_prefix = "*"
+  }
 }
 
 resource "azurerm_subnet_network_security_group_association" "nsg_association" {
@@ -85,7 +97,7 @@ resource "azurerm_managed_disk" "data_disk" {
   name                 = "${var.vm_name}-data-disk"
   location             = var.location
   resource_group_name  = var.resource_group_name
-  storage_account_type = "Premium_LRS"
+  storage_account_type = "Standard_LRS"
   create_option        = "Empty"
   disk_size_gb         = var.data_disk_size_gb
   tags                 = var.tags
@@ -105,7 +117,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
 
   os_disk {
     caching              = "ReadWrite"
-    storage_account_type = "Premium_LRS"
+    storage_account_type = "Standard_LRS"
     disk_size_gb         = 32
   }
 

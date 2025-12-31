@@ -6,8 +6,48 @@ packages:
   - curl
   - tar
   - systemd
+  - jq
 
 write_files:
+  - path: /usr/local/bin/import_dashboards.sh
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+      set -e
+
+      grafana_url="${grafana_url}"
+      api_key="${api_key}"
+      DASHBOARDS_DIR="/etc/grafana/dashboards"
+
+      for dashboard_file in "$DASHBOARDS_DIR"/*.json; do
+        echo "Importing dashboard $dashboard_file ..."
+        DASH_JSON=$(jq -c '.' "$dashboard_file")
+
+        RESPONSE=$(curl -s -X POST "${grafana_url}/api/dashboards/db" \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Bearer $API_KEY" \
+          -d "{\"dashboard\":$DASH_JSON,\"overwrite\":true}")
+
+        echo "Response: $RESPONSE"
+      done
+
+  - path: /etc/systemd/system/grafana-import.service
+    permissions: '0644'
+    content: |
+      [Unit]
+      Description=Import Grafana Dashboards
+      After=grafana-server.service
+      Wants=grafana-server.service
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/local/bin/import_dashboards.sh
+      RemainAfterExit=yes
+
+      [Install]
+      WantedBy=multi-user.target
+
+  # Service Prometheus
   - path: /etc/systemd/system/prometheus.service
     content: |
       [Unit]
@@ -23,6 +63,7 @@ write_files:
       [Install]
       WantedBy=multi-user.target
 
+  # Configuration Prometheus
   - path: /etc/prometheus/prometheus.yml
     content: |
       global:
@@ -32,24 +73,12 @@ write_files:
         - job_name: 'beez360-api'
           metrics_path: /metrics
           static_configs:
-            - targets: ['localhost:9100']
+            - targets: ['${prometheus_target_ip}:9100']  
 
-  - path: /etc/systemd/system/grafana.service
-    content: |
-      [Unit]
-      Description=Grafana Server
-      After=network.target
-
-      [Service]
-      Type=simple
-      User=root
-      ExecStart=/usr/sbin/grafana-server --homepath=/usr/share/grafana
-      Restart=always
-
-      [Install]
-      WantedBy=multi-user.target
+  # Grafana officiel service (pas custom ici)
 
 runcmd:
+  # Installation Prometheus
   - curl -s https://api.github.com/repos/prometheus/prometheus/releases/latest | grep browser_download_url | grep linux-amd64.tar.gz | cut -d '"' -f 4 | wget -i -
   - tar xvf prometheus-*.tar.gz
   - cp prometheus-*/prometheus /usr/local/bin/
@@ -62,7 +91,8 @@ runcmd:
   - systemctl enable prometheus
   - systemctl start prometheus
 
-  - apt-get install -y apt-transport-https software-properties-common wget
+  # Installation Grafana
+  - apt-get install -y apt-transport-https software-properties-common wget jq
   - wget -q -O - https://packages.grafana.com/gpg.key | apt-key add -
   - add-apt-repository "deb https://packages.grafana.com/oss/deb stable main"
   - apt-get update
@@ -70,3 +100,11 @@ runcmd:
   - systemctl daemon-reload
   - systemctl enable grafana-server
   - systemctl start grafana-server
+
+  # Création dossier dashboards
+  - mkdir -p /etc/grafana/dashboards
+
+  # Activation et démarrage du service d'import des dashboards
+  - systemctl daemon-reload
+  - systemctl enable grafana-import.service
+  - systemctl start grafana-import.service

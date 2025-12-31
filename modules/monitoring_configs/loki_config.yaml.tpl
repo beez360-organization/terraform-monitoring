@@ -25,8 +25,8 @@ schema_config:
 storage_config:
   azure:
     container_name: "loki-logs"
-    account_name: "${var.storage_account_name}"
-    account_key: "${data.azurerm_storage_account_keys.storage_keys.keys[0].value}"
+    account_name: "${storage_account_name}"
+    account_key: "${storage_account_key}"
 
 limits_config:
   enforce_metric_name: false
@@ -39,4 +39,3 @@ chunk_store_config:
 table_manager:
   retention_deletes_enabled: true
   retention_period: 336h # 14 days retention max
-
