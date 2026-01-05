@@ -39,9 +39,8 @@ module "vm_metrics" {
   vm_name             = "vm-metrics"
   admin_username      = var.admin_username
   admin_password      = var.admin_password
-  grafana_api_key = var.grafana_api_key
   prometheus_target_ip = module.vm_logs_traces.public_ip_address
-
+  grafana_api_key = var.grafana_api_key
   tags                = var.tags
 }
 

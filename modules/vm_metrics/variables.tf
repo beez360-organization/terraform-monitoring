@@ -42,4 +42,3 @@ variable "prometheus_target_ip" {
   description = "IP address of the Prometheus target (vm_metrics or vm_logs_traces depending on context)"
   type        = string
 } 
-

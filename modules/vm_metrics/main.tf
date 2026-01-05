@@ -99,10 +99,11 @@ resource "azurerm_network_interface" "this" {
 data "template_file" "cloud_init" {
   template = file("${path.module}/cloud-init.yaml")
 
-  vars = {
-    grafana_url = "http://${azurerm_public_ip.this.ip_address}:3000"
-    api_key     = var.grafana_api_key
+   vars = {
+    grafana_url          = "http://${azurerm_public_ip.this.ip_address}:3000"
+    api_key              = var.grafana_api_key
     prometheus_target_ip = var.prometheus_target_ip
+    admin_password       = var.admin_password
   }
 }
 
@@ -142,7 +143,7 @@ resource "azurerm_managed_disk" "data_disk" {
   name                 = "${var.vm_name}-data-disk"
   location             = var.location
   resource_group_name  = var.resource_group_name
-  storage_account_type = "Standard_LRS"  # Ou Standard_LRS selon besoin
+  storage_account_type = "Standard_LRS"  
   create_option        = "Empty"
   disk_size_gb         = 64              
   tags                 = var.tags
@@ -156,5 +157,4 @@ resource "azurerm_virtual_machine_data_disk_attachment" "data_disk_attachment" {
   caching            = "ReadWrite"
   create_option      = "Attach"
 }
-
 

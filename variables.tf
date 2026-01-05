@@ -95,3 +95,5 @@ variable "image_sku" {
   type        = string
   default     = "20.04-LTS"
 }
+
+variable "logs_traces_ip"{}
