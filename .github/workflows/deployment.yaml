@@ -21,7 +21,7 @@ jobs:
         uses: azure/login@v1
         with:
           client-id: ${{ secrets.CLIENT_ID_MONITOR }}
-          tenant-id: ${{ secrets.AZURE_TENANTID }}
+          tenant-id: ${{ secrets.TENANT_ID_MONITOR }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTIONID }}
 
       - name: Setup Terraform
