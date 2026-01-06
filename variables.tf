@@ -60,6 +60,8 @@ variable "grafana_api_key" {
   description = "API Key for Grafana to import dashboards"
   type        = string
   sensitive   = true
+  default = ""
+
 }
 variable "storage_account_name" {
   description = "Nom du compte de stockage"
@@ -96,4 +98,15 @@ variable "image_sku" {
   default     = "20.04-LTS"
 }
 
-variable "logs_traces_ip"{}
+variable "logs_traces_ip"{
+
+default=""
+  
+}
+variable "subscription_id"{
+
+description="subscriptionn id "
+type = string
+default="7df6c09e-5b30-41d7-8bf2-d39b61f07de3"
+
+}

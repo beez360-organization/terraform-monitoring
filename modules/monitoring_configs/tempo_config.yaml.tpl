@@ -7,7 +7,7 @@ storage:
     azureblob:
       container: "tempo-traces"
       account_name: "beez360storage"
-      account_key: "${data.azurerm_storage_account_keys.beez360.keys[0].value}"
+      account_key: "${data.azurerm_storage_account.beez360.primary_access_key}"
 
   index:
     prefix: "tempo_index_"
@@ -16,7 +16,7 @@ storage:
     azureblob:
       container: "tempo-index"
       account_name: "beez360storage"
-      account_key: "${data.azurerm_storage_account_keys.beez360.keys[0].value}"
+      account_key: "${data.azurerm_storage_account.beez360.primary_access_key}"
 
 sampling:
   default_strategy:

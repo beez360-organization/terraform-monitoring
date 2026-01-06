@@ -19,3 +19,6 @@ output "storage_account_id" {
 output "traces_container_name" {
   value = azurerm_storage_container.traces.name
 }
+output "storage_account_primary_key" {
+  value = data.azurerm_storage_account.beez360.primary_access_key
+}

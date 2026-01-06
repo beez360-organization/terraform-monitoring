@@ -30,7 +30,9 @@ resource "azurerm_storage_container" "traces" {
   storage_account_name  = azurerm_storage_account.this.name
   container_access_type = "private"
 }
-data "azurerm_storage_account_keys" "beez360" {
-  storage_account_id = data.azurerm_storage_account.beez360.id
+
+data "azurerm_storage_account" "beez360" {
+  name                = var.storage_account_name
+  resource_group_name  = var.resource_group_name
 }
 
