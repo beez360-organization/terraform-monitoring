@@ -4,8 +4,7 @@ on:
   push:
     branches:
       - main
-    paths:
-      - '**.tf'
+ 
 permissions:
   contents: read
   id-token: write  
@@ -30,7 +29,6 @@ jobs:
         with:
           terraform_version: 1.13.3
 
-      # Cache du dossier .terraform/plugins pour éviter de retélécharger les providers à chaque run
       - name: Cache Terraform providers
         uses: actions/cache@v3
         with:
@@ -47,7 +45,7 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
 
-      # Ajout d'un timeout de verrouillage pour éviter blocages sur le state
+
       - name: Terraform Plan
         run: terraform plan -lock-timeout=5m
 
