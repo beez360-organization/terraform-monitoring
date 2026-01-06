@@ -16,12 +16,10 @@ data "template_file" "tempo_config" {
 
 resource "local_file" "loki_config_yaml" {
   content  = data.template_file.loki_config.rendered
-  filename = "${path.module}/generated/loki-config.yaml"
+  filename = "${path.module}/loki_config.yaml"
 }
 
 resource "local_file" "tempo_config_yaml" {
   content  = data.template_file.tempo_config.rendered
-  filename = "${path.module}/generated/tempo-config.yaml"
+  filename = "${path.module}/tempo_config.yaml"
 }
-
-

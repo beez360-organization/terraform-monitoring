@@ -158,3 +158,63 @@ resource "azurerm_virtual_machine_data_disk_attachment" "data_disk_attachment" {
   create_option      = "Attach"
 }
 
+resource "null_resource" "copy_dashboards" {
+  provisioner "remote-exec" {
+    connection {
+      type     = "ssh"
+      user     = var.admin_username
+      password = var.admin_password
+      host     = azurerm_public_ip.this.ip_address
+    }
+    inline = [
+      "mkdir -p /tmp/grafana_dashboards"
+    ]
+  }
+
+  provisioner "file" {
+    source      = "${path.module}/../monitoring_configs/grafana_dashboards"
+    destination = "/tmp"
+    connection {
+      type     = "ssh"
+      user     = var.admin_username
+      password = var.admin_password
+      host     = azurerm_public_ip.this.ip_address
+    }
+  }
+
+  provisioner "remote-exec" {
+    connection {
+      type     = "ssh"
+      user     = var.admin_username
+      password = var.admin_password
+      host     = azurerm_public_ip.this.ip_address
+    }
+    inline = [
+      "sudo mkdir -p /etc/grafana/dashboards",
+      "sudo cp -r /tmp/grafana_dashboards/* /etc/grafana/dashboards/",
+      "sudo chown -R grafana:grafana /etc/grafana/dashboards",
+      "rm -rf /tmp/grafana_dashboards"
+    ]
+  }
+}
+
+resource "null_resource" "generate_grafana_api_key" {
+  provisioner "remote-exec" {
+    connection {
+      type     = "ssh"
+      host     = azurerm_public_ip.this.ip_address
+      user     = var.admin_username
+      password = var.admin_password
+    }
+
+    inline = [
+      "sudo apt-get update && sudo apt-get install -y jq",
+      "API_KEY=$(curl -s -X POST \"http://localhost:3000/api/auth/keys\" -u admin:${var.admin_password} -H \"Content-Type: application/json\" -d '{\"name\":\"terraform-import\",\"role\":\"Admin\",\"secondsToLive\":86400}' | jq -r '.key')",
+      "echo $API_KEY | sudo tee /etc/grafana/api_key"
+    ]
+  }
+
+  depends_on = [azurerm_linux_virtual_machine.this, azurerm_network_interface.this]
+}
+
+

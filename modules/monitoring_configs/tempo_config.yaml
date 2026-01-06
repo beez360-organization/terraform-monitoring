@@ -9,6 +9,7 @@ storage:
       account_name: "beez360storage"
       account_key: "${data.azurerm_storage_account_keys.beez360.keys[0].value}"
 
+
   index:
     prefix: "tempo_index_"
     period: 24h
@@ -17,6 +18,8 @@ storage:
       container: "tempo-index"
       account_name: "beez360storage"
       account_key: "${data.azurerm_storage_account_keys.beez360.keys[0].value}"
+
+
 
 sampling:
   default_strategy:

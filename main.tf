@@ -53,8 +53,20 @@ module "vm_logs_traces" {
   admin_username      = var.admin_username
   admin_password      = var.admin_password
   tags                = var.tags
+  loki_config_path    = module.monitoring_configs.loki_config_path
+  tempo_config_path   = module.monitoring_configs.tempo_config_path
+
+
 }
 
+module "monitoring_configs" {
+  source = "./modules/monitoring_configs"
+
+  storage_account_name = var.storage_account_name
+  storage_account_key  = module.storage.primary_access_key
+  loki_address         = "http://${module.vm_logs_traces.public_ip_address}:3100" 
+  depends_on = [module.storage]
+}
 
 module "storage" {
   source              = "./modules/storage"

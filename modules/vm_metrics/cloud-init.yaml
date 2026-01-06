@@ -19,19 +19,19 @@ write_files:
       set -e
 
       grafana_url="${grafana_url}"
-      api_key=$$(cat /etc/grafana/api_key)
+      api_key=$(cat /etc/grafana/api_key)
       DASHBOARDS_DIR="/etc/grafana/dashboards"
 
-      for dashboard_file in "$$DASHBOARDS_DIR"/*.json; do
-        echo "Importing dashboard $$dashboard_file ..."
-        DASH_JSON=$$(jq -c '.' "$$dashboard_file")
+      for dashboard_file in "$DASHBOARDS_DIR"/*.json; do
+        echo "Importing dashboard $dashboard_file ..."
+        DASH_JSON=$(jq -c '.' "$dashboard_file")
 
-        RESPONSE=$$(curl -s -X POST "${grafana_url}/api/dashboards/db" \
+        RESPONSE=$(curl -s -X POST "${grafana_url}/api/dashboards/db" \
           -H "Content-Type: application/json" \
-          -H "Authorization: Bearer $$api_key" \
-          -d "{{\"dashboard\":$$DASH_JSON,\"overwrite\":true}}")
+          -H "Authorization: Bearer $api_key" \
+          -d "{\"dashboard\":$DASH_JSON,\"overwrite\":true}")
 
-        echo "Response: $$RESPONSE"
+        echo "Response: $RESPONSE"
       done
 
   - path: /etc/systemd/system/grafana-import.service
@@ -80,7 +80,7 @@ write_files:
         - job_name: 'beez360-api'
           metrics_path: /metrics
           static_configs:
-            - targets: ["$${prometheus_target_ip}:9100"]
+            - targets: ["${prometheus_target_ip}:9100"]
 
 runcmd:
   - curl -s https://api.github.com/repos/prometheus/prometheus/releases/latest | grep browser_download_url | grep linux-amd64.tar.gz | cut -d '"' -f 4 | wget -i -
@@ -115,11 +115,11 @@ runcmd:
 
   # Générer la clé API et la sauvegarder (en utilisant l'IP publique pour l'URL)
   - |
-    api_key=$$(curl -s -X POST ${grafana_url}/api/auth/keys \
+    api_key=$(curl -s -X POST ${grafana_url}/api/auth/keys \
       -u admin:${admin_password} \
       -H "Content-Type: application/json" \
       -d '{"name":"terraform-import","role":"Admin","secondsToLive":86400}' | jq -r '.key')
-    echo $$api_key > /etc/grafana/api_key
+    echo $api_key > /etc/grafana/api_key
 
   # Démarrer le service d'import des dashboards
   - systemctl daemon-reload

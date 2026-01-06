@@ -33,9 +33,9 @@ write_files:
         http_listen_port: 3100
       storage_config:
         boltdb:
-          directory: /tmp/loki/index
+          directory: /var/lib/loki/index
         filesystem:
-          directory: /tmp/loki/chunks
+          directory: /var/lib/loki/chunks
       schema_config:
         configs:
           - from: 2020-10-15
@@ -77,23 +77,25 @@ write_files:
         trace:
           backend: local
           local:
-            path: /tmp/tempo/traces
+            path: /var/lib/tempo/traces
 
 runcmd:
   - curl -s https://api.github.com/repos/grafana/loki/releases/latest | grep browser_download_url | grep linux-amd64.zip | cut -d '"' -f 4 | wget -i -
-  - unzip loki-*-linux-amd64.zip
+  - unzip -o loki-*-linux-amd64.zip
   - cp loki-linux-amd64 /usr/local/bin/loki
-  - mkdir -p /etc/loki /tmp/loki/index /tmp/loki/chunks
+  - mkdir -p /var/lib/loki/index /var/lib/loki/chunks
   - chmod a+x /usr/local/bin/loki
+
+  - curl -s https://api.github.com/repos/grafana/tempo/releases/latest | grep browser_download_url | grep linux-amd64.zip | cut -d '"' -f 4 | wget -i -
+  - unzip -o tempo-*-linux-amd64.zip
+  - cp tempo-linux-amd64 /usr/local/bin/tempo
+  - mkdir -p /var/lib/tempo/traces
+  - chmod a+x /usr/local/bin/tempo
+
   - systemctl daemon-reload
   - systemctl enable loki
   - systemctl start loki
-
-  - curl -s https://api.github.com/repos/grafana/tempo/releases/latest | grep browser_download_url | grep linux-amd64.zip | cut -d '"' -f 4 | wget -i -
-  - unzip tempo-*-linux-amd64.zip
-  - cp tempo-linux-amd64 /usr/local/bin/tempo
-  - mkdir -p /etc/tempo /tmp/tempo/traces
-  - chmod a+x /usr/local/bin/tempo
-  - systemctl daemon-reload
   - systemctl enable tempo
   - systemctl start tempo
+
+  - rm -f loki-*-linux-amd64.zip tempo-*-linux-amd64.zip

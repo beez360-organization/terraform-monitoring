@@ -140,3 +140,49 @@ resource "azurerm_virtual_machine_data_disk_attachment" "data_disk_attachment" {
   caching            = "ReadWrite"
   create_option      = "Attach"
 }
+
+
+resource "null_resource" "deploy_loki_tempo_configs" {
+  depends_on = [azurerm_linux_virtual_machine.vm]
+
+  provisioner "file" {
+    source      = "${path.module}/../monitoring_configs/loki_config.yaml.tpl"
+    destination = "/tmp/local-config-loki.yaml"
+
+    connection {
+      type     = "ssh"
+      host     = azurerm_public_ip.this.ip_address
+      user     = var.admin_username
+      password = var.admin_password
+    }
+  }
+
+  provisioner "file" {
+    source      = "${path.module}/../monitoring_configs/tempo_config.yaml.tpl"
+    destination = "/tmp/local-config-tempo.yaml"
+
+    connection {
+      type     = "ssh"
+      host     = azurerm_public_ip.this.ip_address
+      user     = var.admin_username
+      password = var.admin_password
+    }
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo mv /tmp/local-config-loki.yaml /etc/loki/local-config.yaml",
+      "sudo mv /tmp/local-config-tempo.yaml /etc/tempo/local-config.yaml",
+      "sudo systemctl daemon-reload",
+      "sudo systemctl restart loki",
+      "sudo systemctl restart tempo"
+    ]
+
+    connection {
+      type     = "ssh"
+      host     = azurerm_public_ip.this.ip_address
+      user     = var.admin_username
+      password = var.admin_password
+    }
+  }
+}

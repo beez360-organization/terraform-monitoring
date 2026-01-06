@@ -7,6 +7,7 @@ output "primary_access_key" {
   sensitive = true
 }
 
+
 output "logs_container_name" {
   value = azurerm_storage_container.logs.name
 }
