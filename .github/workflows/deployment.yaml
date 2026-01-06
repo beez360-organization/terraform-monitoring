@@ -29,14 +29,26 @@ jobs:
         with:
           terraform_version: 1.13.3
 
+      # Cache du dossier .terraform/plugins pour éviter de retélécharger les providers à chaque run
+      - name: Cache Terraform providers
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.terraform.d/plugin-cache
+            .terraform/plugins
+          key: ${{ runner.os }}-terraform-providers-${{ hashFiles('**/*.tf') }}
+          restore-keys: |
+            ${{ runner.os }}-terraform-providers-
+
       - name: Terraform Init
         run: terraform init --upgrade
 
       - name: Terraform Validate
         run: terraform validate
 
+      # Ajout d'un timeout de verrouillage pour éviter blocages sur le state
       - name: Terraform Plan
-        run: terraform plan
+        run: terraform plan -lock-timeout=5m
 
       - name: Terraform Apply
         run: terraform apply -auto-approve
