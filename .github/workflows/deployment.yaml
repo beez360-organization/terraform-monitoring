@@ -22,7 +22,7 @@ jobs:
         with:
           client-id: ${{ secrets.CLIENT_ID_MONITOR }}
           tenant-id: ${{ secrets.TENANT_ID_MONITOR }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTIONID }}
+          subscription-id: ${{ secrets.SUBSCRIPTION_ID_MONITOR }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
