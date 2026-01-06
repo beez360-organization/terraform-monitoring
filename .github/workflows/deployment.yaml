@@ -20,10 +20,9 @@ jobs:
       - name: Azure Login via OIDC
         uses: azure/login@v1
         with:
-          client-id: ${{ secrets.AZURE_CLIENTID }}
+          client-id: ${{ secrets.CLIENT_ID_MONITOR }}
           tenant-id: ${{ secrets.AZURE_TENANTID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTIONID }}
-          allow-no-subscriptions: true  
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
