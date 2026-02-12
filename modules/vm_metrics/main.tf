@@ -207,7 +207,7 @@ resource "azurerm_network_interface" "this" {
 }
 
 locals {
-  cloud_init = replace(
+  cloud_init_step1 = replace(
     replace(
       replace(
         replace(
@@ -222,10 +222,11 @@ locals {
   )
 
   cloud_init = replace(
-    local.cloud_init,
+    local.cloud_init_step1,
     "__PROM_PROMITOR__", var.promitor_target
   )
 }
+
 
 
 ##############################
