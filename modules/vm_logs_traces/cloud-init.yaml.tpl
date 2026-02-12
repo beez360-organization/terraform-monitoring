@@ -6,7 +6,7 @@ packages:
   - wget
   - curl
   - unzip
-  - blobfuse
+  - fuse
   - lsof
   - liblua5.1-0
   - lua-cjson
@@ -543,42 +543,61 @@ write_files:
       
 
 runcmd:
-  - curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-  - echo "deb [arch=amd64] https://packages.microsoft.com/ubuntu/18.04/prod bionic main" | sudo tee /etc/apt/sources.list.d/microsoft-prod.list
-  - sudo apt update
-  - sudo apt install -y lua-cjson liblua5.1-0
-  - ls /usr/lib/x86_64-linux-gnu/lua/5.1/cjson.so 
+  # =========================
+  # Repo Microsoft + Blobfuse
+  # =========================
+  - wget https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb -O /tmp/packages-microsoft-prod.deb
+  - dpkg -i /tmp/packages-microsoft-prod.deb
+  - apt-get update
+  - apt-get install -y blobfuse
 
-  - mkdir -p /etc/loki /var/loki/{index,cache,compactor} /mnt/blobfuse_tmp
+  # Dossier temporaire blobfuse
   - mkdir -p /mnt/blobfuse_tmp
   - chmod 777 /mnt/blobfuse_tmp
-  # Installation et configuration de Loki
-  - sudo apt install unzip
-  - cd /tmp
-  - wget https://github.com/grafana/loki/releases/download/v2.9.1/loki-linux-amd64.zip
-  - unzip loki-linux-amd64.zip
-  - chmod +x loki-linux-amd64
-  - sudo mv loki-linux-amd64 /usr/local/bin/loki
-  - sudo mkdir -p /var/loki/compactor
-  - sudo chown -R azureuser:azureuser /var/loki
 
-  - sudo systemctl daemon-reload
-  - sudo systemctl enable loki
-  - sudo systemctl start loki
 
+  # =========================
+  # Installation Loki
+  # =========================
+  - apt-get install -y unzip
+  - wget https://github.com/grafana/loki/releases/download/v2.9.1/loki-linux-amd64.zip -O /tmp/loki.zip
+  - unzip /tmp/loki.zip -d /tmp
+  - chmod +x /tmp/loki-linux-amd64
+  - mv /tmp/loki-linux-amd64 /usr/local/bin/loki
+
+  - mkdir -p /etc/loki /var/loki/{index,cache,compactor}
+  - chown -R azureuser:azureuser /var/loki
+
+  - systemctl daemon-reload
+  - systemctl enable loki
+  - systemctl start loki
+
+  # =========================
+  # Optimisation kernel
+  # =========================
   - echo "vm.swappiness=10" >> /etc/sysctl.conf
   - echo "vm.max_map_count=262144" >> /etc/sysctl.conf
   - sysctl -p
+
   # =========================
-  # Installation Fluent Bit 4.0.0
+  # Installation Fluent Bit
   # =========================
-  - curl -fsSL https://raw.githubusercontent.com/fluent/fluent-bit/master/install.sh | sudo sh
-  - echo 'export PATH=$PATH:/opt/fluent-bit/bin' >> /etc/profile.d/fluent-bit.sh
-  - source /etc/profile.d/fluent-bit.sh
- 
-  - systemctl daemon-reexec
-  - systemctl enable loki fluent-bit
-  - systemctl start loki
-  - systemctl start fluent-bit
+  - curl -fsSL https://raw.githubusercontent.com/fluent/fluent-bit/master/install.sh | sh
+  - mkdir -p /etc/systemd/system/fluent-bit.service.d
+  - echo "[Service]" > /etc/systemd/system/fluent-bit.service.d/override.conf
+  - echo "ExecStart=" >> /etc/systemd/system/fluent-bit.service.d/override.conf
+  - echo "ExecStart=/opt/fluent-bit/bin/fluent-bit -c /etc/td-agent-bit/td-agent-bit.conf" >> /etc/systemd/system/fluent-bit.service.d/override.conf
+  - systemctl daemon-reload
+
+  - systemctl enable fluent-bit
+  - systemctl restart fluent-bit
+    # Exécuter montage blobfuse
+  - chmod +x /etc/blobfuse-mount.sh
+
+  - /etc/blobfuse-mount.sh
+
+  # =========================
+  # Cron montages automatiques
+  # =========================
   - echo "*/5 * * * * root flock -n /tmp/blobfuse.lock /etc/blobfuse-mount.sh >> /var/log/blobfuse-mount.log 2>&1" > /etc/cron.d/blobfuse-mount
   - echo "0 3 * * * root flock -n /tmp/clean.lock /etc/clean-old-logs.sh >> /var/log/clean-old-logs.log 2>&1" > /etc/cron.d/clean-old-logs
