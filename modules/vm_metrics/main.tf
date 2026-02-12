@@ -18,6 +18,28 @@ resource "azurerm_network_security_group" "nsg" {
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
+security_rule {
+  name                       = "AllowPromitor"
+  priority                   = 115
+  direction                  = "Inbound"
+  access                     = "Allow"
+  protocol                   = "Tcp"
+  source_port_range          = "*"
+  destination_port_range     = "8080"
+  source_address_prefix      = "*"
+  destination_address_prefix = "*"
+}
+security_rule {
+  name                       = "AllowNodeExporter"
+  priority                   = 105
+  direction                  = "Inbound"
+  access                     = "Allow"
+  protocol                   = "Tcp"
+  source_port_range          = "*"
+  destination_port_range     = "9100"
+  source_address_prefix      = "*"
+  destination_address_prefix = "*"
+}
 
   security_rule {
     name                       = "AllowGrafana"
@@ -188,17 +210,23 @@ locals {
   cloud_init = replace(
     replace(
       replace(
-        file("${path.module}/cloud-init.yaml.tpl"),
-        "__GRAFANA_URL__",
-        var.grafana_url
+        replace(
+          file("${path.module}/cloud-init.yaml.tpl"),
+          "__GRAFANA_URL__", var.grafana_url
+        ),
+        "__PROM_URL__", var.prometheus_url
       ),
-      "__PROM_URL__",
-      var.prometheus_url
+      "__LOKI_URL__", var.loki_url
     ),
-    "__LOKI_URL__",
-    var.loki_url
+    "__PROM_NODE_EXPORTER__", var.node_exporter_target
+  )
+
+  cloud_init = replace(
+    local.cloud_init,
+    "__PROM_PROMITOR__", var.promitor_target
   )
 }
+
 
 ##############################
 # VM Linux avec Managed Identity

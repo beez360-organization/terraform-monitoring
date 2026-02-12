@@ -46,6 +46,17 @@ variable "grafana_url" {
   type        = string
   description = "URL de Grafana"
 }
+variable "promitor_url" {
+  type = string
+}
+
+variable "node_exporter_target" {
+  type = string
+}
+
+variable "promitor_target" {
+  type = string
+}
 
 variable "prometheus_url" {
   type        = string
