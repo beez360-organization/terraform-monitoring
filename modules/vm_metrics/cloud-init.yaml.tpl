@@ -31,7 +31,7 @@ write_files:
       useradd --no-create-home --shell /bin/false prometheus || true
       mkdir -p /etc/prometheus /var/lib/prometheus
       chown -R prometheus:prometheus /etc/prometheus /var/lib/prometheus
-      wget https://github.com/prometheus/prometheus/releases/download/v${PROM_VERSION}/prometheus-${PROM_VERSION}.linux-amd64.tar.gz -O /tmp/prometheus.tar.gz
+      wget -q https://github.com/prometheus/prometheus/releases/download/v${PROM_VERSION}/prometheus-${PROM_VERSION}.linux-amd64.tar.gz -O /tmp/prometheus.tar.gz
       tar xzf /tmp/prometheus.tar.gz -C /tmp/
       cp /tmp/prometheus-${PROM_VERSION}.linux-amd64/prometheus ${PROM_DIR}/
       cp /tmp/prometheus-${PROM_VERSION}.linux-amd64/promtool ${PROM_DIR}/
@@ -52,7 +52,6 @@ write_files:
       systemctl enable grafana-server
       systemctl start grafana-server
 
-
   # Promitor start script
   - path: /usr/local/bin/start_promitor.sh
     permissions: '0755'
@@ -70,7 +69,7 @@ write_files:
       #!/bin/bash
       set -e
       source /etc/grafana/env
-      DASHBOARDS_DIR="/etc/grafana/dashboards"
+      DASHBOARDS_DIR="/var/lib/grafana/dashboards"
       api_key=$(cat /etc/grafana/api_key)
       until curl -s $GRAFANA_URL/api/health | jq -e '.database=="ok"' > /dev/null; do
         echo "Waiting for Grafana to be ready..."
@@ -145,6 +144,8 @@ write_files:
         - job_name: 'promitor'
           static_configs:
             - targets: ['__PROM_PROMITOR__']
+
+  # Grafana dashboards provisioning
   - path: /etc/grafana/provisioning/dashboards/default.yaml
     permissions: '0644'
     content: |
@@ -164,9 +165,9 @@ write_files:
     content: |
       version: v1
       azureMetadata:
-        tenantId: "4577d937-9ed0-46b9-a6ca-17f02fa7984b"
-        subscriptionId: "7df6c09e-5b30-41d7-8bf2-d39b61f07de3"
-        resourceGroupName: "beez360-frc-franchisee-paris-dev-rg"
+        tenantId: "__TENANT_ID__"
+        subscriptionId: "__SUBSCRIPTION_ID__"
+        resourceGroupName: "__RESOURCE_GROUP__"
       metricDefaults:
         aggregation:
           interval: 00:01:00
@@ -471,31 +472,46 @@ write_files:
             transformation: None
 
 runcmd:
+  - systemctl enable --now docker
+
   - mkdir -p /etc/grafana/dashboards
-  - wget -O /etc/grafana/dashboards/loki-dashboard.json https://raw.githubusercontent.com/grafana/loki/main/production/helm/loki-stack/templates/grafana/dashboards/loki-dashboard.json
-  - wget -O /etc/grafana/dashboards/tempo-dashboard.json https://raw.githubusercontent.com/grafana/tempo/main/production/helm/tempo/templates/grafana/dashboards/tempo-dashboard.json
-  - /usr/local/bin/install_grafana.sh
-  - systemctl enable --now grafana-server
   - mkdir -p /var/lib/grafana/dashboards
+  - chown -R grafana:grafana /var/lib/grafana/dashboards
+
+  - wget -q -O /var/lib/grafana/dashboards/loki-dashboard.json https://raw.githubusercontent.com/grafana/loki/main/production/helm/loki-stack/templates/grafana/dashboards/loki-dashboard.json
+  - wget -q -O /var/lib/grafana/dashboards/tempo-dashboard.json https://raw.githubusercontent.com/grafana/tempo/main/production/helm/tempo/templates/grafana/dashboards/tempo-dashboard.json
   - curl -fsSL -o /var/lib/grafana/dashboards/api-dashboard.json https://raw.githubusercontent.com/beez360-organization/terraform-monitoring/main/dashboards/api-dashboard.json
   - curl -fsSL -o /var/lib/grafana/dashboards/backoffice.json https://raw.githubusercontent.com/beez360-organization/terraform-monitoring/main/dashboards/backoffice.json
   - curl -fsSL -o /var/lib/grafana/dashboards/c_c.json https://raw.githubusercontent.com/beez360-organization/terraform-monitoring/main/dashboards/c_c.json
   - curl -fsSL -o /var/lib/grafana/dashboards/global-informations.json https://raw.githubusercontent.com/beez360-organization/terraform-monitoring/main/dashboards/global-informations.json
   - curl -fsSL -o /var/lib/grafana/dashboards/postgres.json https://raw.githubusercontent.com/beez360-organization/terraform-monitoring/main/dashboards/postgres.json
 
+  - /usr/local/bin/install_prometheus.sh
+  - systemctl daemon-reload
+  - systemctl enable --now prometheus
+
+  - /usr/local/bin/install_grafana.sh
+  - systemctl enable --now grafana-server
+
+  - systemctl enable --now promitor.service
+
   - systemctl restart grafana-server
+
   - |
     until curl -s __GRAFANA_URL__/api/health | jq -e '.database=="ok"' > /dev/null; do
       echo "Waiting for Grafana..."
       sleep 5
     done
+
   - |
     api_key=$(curl -s -X POST __GRAFANA_URL__/api/auth/keys \
       -u admin:${ADMIN_PASSWORD} \
       -H "Content-Type: application/json" \
       -d '{"name":"terraform-import","role":"Admin","secondsToLive":86400}' | jq -r '.key')
     echo $api_key > /etc/grafana/api_key
+
   - systemctl enable --now grafana-import.service
+
   - |
     curl -s -X POST __GRAFANA_URL__/api/datasources \
       -H "Content-Type: application/json" \
@@ -507,6 +523,7 @@ runcmd:
         "access":"proxy",
         "basicAuth":false
       }'
+
   - |
     curl -s -X POST __GRAFANA_URL__/api/datasources \
       -H "Content-Type: application/json" \
