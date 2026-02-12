@@ -231,7 +231,6 @@ resource "azurerm_linux_virtual_machine" "this" {
   identity {
     type = "SystemAssigned"
   }
-
 custom_data = base64encode(local.cloud_init)
 
 
