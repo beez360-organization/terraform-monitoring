@@ -32,11 +32,7 @@ variable "ip_address" {
   description = "Optional static IP for the VM"
   default     = null
 }
-variable "grafana_api_key" {
-  description = "API Key for Grafana to import dashboards"
-  type        = string
-  sensitive   = true
-}
+
 variable "data_disk_size_gb" {
   type    = number
   default = 64

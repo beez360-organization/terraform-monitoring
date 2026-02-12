@@ -50,7 +50,6 @@ module "vm_metrics" {
   admin_username      = var.admin_username
   admin_password      = var.admin_password
   prometheus_target_ip = module.vm_logs_traces.public_ip_address
-  grafana_api_key     = var.grafana_api_key
   grafana_url    = "http://${module.vm_metrics.public_ip_address}:3000"
   prometheus_url = "http://${module.vm_metrics.public_ip_address}:9090"
   loki_url       = "http://${module.vm_logs_traces.public_ip_address}:3100"
