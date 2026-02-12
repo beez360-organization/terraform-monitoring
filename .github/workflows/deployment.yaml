@@ -2,22 +2,20 @@ name: Terraform Azure Deployment
 
 on:
   push:
-    branches:
-      - main
- 
+    branches: [main]
+
 permissions:
   contents: read
-  id-token: write  
+  id-token: write
 
 jobs:
   terraform:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Azure Login via OIDC
+      - name: Azure Login
         uses: azure/login@v1
         with:
           client-id: ${{ secrets.CLIENT_ID_MONITOR }}
@@ -27,27 +25,23 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.13.3
+          terraform_version: 1.6.6
 
-      - name: Cache Terraform providers
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.terraform.d/plugin-cache
-            .terraform/plugins
-          key: ${{ runner.os }}-terraform-providers-${{ hashFiles('**/*.tf') }}
-          restore-keys: |
-            ${{ runner.os }}-terraform-providers-
+      # ---------- BOOTSTRAP BACKEND ----------
+      - name: Terraform Bootstrap Init
+        working-directory: bootstrap
+        run: terraform init
 
+      - name: Terraform Bootstrap Apply
+        working-directory: bootstrap
+        run: terraform apply -auto-approve
+
+      # ---------- REAL STACK ----------
       - name: Terraform Init
-        run: terraform init --upgrade
-
-      - name: Terraform Validate
-        run: terraform validate
-
+        run: terraform init -reconfigure
 
       - name: Terraform Plan
-        run: terraform plan -lock-timeout=5m
+        run: terraform plan -var-file=terraform.tfvars
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve
+        run: terraform apply -auto-approve -var-file=terraform.tfvars
