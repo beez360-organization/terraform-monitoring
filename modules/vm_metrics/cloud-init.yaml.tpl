@@ -165,9 +165,9 @@ write_files:
     content: |
       version: v1
       azureMetadata:
-        tenantId: "__TENANT_ID__"
-        subscriptionId: "__SUBSCRIPTION_ID__"
-        resourceGroupName: "__RESOURCE_GROUP__"
+        tenantId: "4577d937-9ed0-46b9-a6ca-17f02fa7984b"
+        subscriptionId: "7df6c09e-5b30-41d7-8bf2-d39b61f07de3"
+        resourceGroupName: "beez360-frc-franchisee-paris-dev-rg"
       metricDefaults:
         aggregation:
           interval: 00:01:00
