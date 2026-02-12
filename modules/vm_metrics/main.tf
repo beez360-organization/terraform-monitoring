@@ -155,7 +155,6 @@ resource "azurerm_network_security_group" "nsg" {
   }
 }
 
-
 resource "azurerm_subnet_network_security_group_association" "nsg_association" {
   subnet_id                 = var.subnet_id
   network_security_group_id = azurerm_network_security_group.nsg.id
@@ -184,6 +183,7 @@ resource "azurerm_network_interface" "this" {
     public_ip_address_id          = azurerm_public_ip.this.id
   }
 }
+
 locals {
   cloud_init = replace(
     replace(
@@ -200,7 +200,6 @@ locals {
   )
 }
 
- 
 ##############################
 # VM Linux avec Managed Identity
 ##############################
@@ -231,38 +230,8 @@ resource "azurerm_linux_virtual_machine" "this" {
   identity {
     type = "SystemAssigned"
   }
-custom_data = base64encode(local.cloud_init)
 
+  custom_data = base64encode(local.cloud_init)
 
   tags = var.tags
 }
-
-##############################
-# Role assignments
-##############################
-data "azurerm_resource_group" "this" {
-  name = var.resource_group_name
-}
-
-##############################
-# Data source pour récupérer subscription id
-##############################
-data "azurerm_subscription" "primary" {}
-
-# Role assignment au niveau subscription
-resource "azurerm_role_assignment" "reader_subscription" {
-  scope                = data.azurerm_subscription.primary.id
-  role_definition_name = "Monitoring Reader"  
-  principal_id         = azurerm_linux_virtual_machine.this.identity[0].principal_id
-}
-
-# Role assignment au niveau resource group
-resource "azurerm_role_assignment" "reader_rg" {
-  scope                = data.azurerm_resource_group.this.id
-  role_definition_name = "Monitoring Reader"
-  principal_id         = azurerm_linux_virtual_machine.this.identity[0].principal_id
-}
-
-
-
-
