@@ -27,7 +27,11 @@ variable "tags" {
   type    = map(string)
   default = {}
 }
-
+variable "ip_address" {
+  type        = string
+  description = "Optional static IP for the VM"
+  default     = null
+}
 variable "grafana_api_key" {
   description = "API Key for Grafana to import dashboards"
   type        = string
@@ -42,3 +46,17 @@ variable "prometheus_target_ip" {
   description = "IP address of the Prometheus target (vm_metrics or vm_logs_traces depending on context)"
   type        = string
 } 
+variable "grafana_url" {
+  type        = string
+  description = "URL de Grafana"
+}
+
+variable "prometheus_url" {
+  type        = string
+  description = "URL de Prometheus"
+}
+
+variable "loki_url" {
+  type        = string
+  description = "URL de Loki"
+}

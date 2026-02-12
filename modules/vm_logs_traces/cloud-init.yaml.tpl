@@ -6,11 +6,13 @@ packages:
   - wget
   - curl
   - unzip
-  - blobfuse2
-  - td-agent-bit=1.9.10-1
+  - blobfuse
   - lsof
   - liblua5.1-0
   - lua-cjson
+  - apt-transport-https
+  - ca-certificates
+
 
 write_files:
   # =========================
@@ -66,7 +68,65 @@ write_files:
         retention_enabled: true
         retention_delete_delay: 0s
         retention_delete_worker_count: 10
-        delete_request_store: filesystem
+        shared_store: azure
+  # =========================
+  # BLOBFUSE CONFIGS POUR LES 8 CONTENEURS
+  # =========================
+  - path: /etc/blobfuse-insights-logs-appserviceauditlogs.cfg
+    permissions: "0600"
+    content: |
+      accountName __STORAGE_ACCOUNT_NAME__
+      accountKey __STORAGE_ACCOUNT_KEY__
+      containerName insights-logs-appserviceauditlogs
+
+  - path: /etc/blobfuse-insights-logs-appserviceconsolelogs.cfg
+    permissions: "0600"
+    content: |
+      accountName __STORAGE_ACCOUNT_NAME__
+      accountKey __STORAGE_ACCOUNT_KEY__
+      containerName insights-logs-appserviceconsolelogs
+
+  - path: /etc/blobfuse-insights-logs-appservicehttplogs.cfg
+    permissions: "0600"
+    content: |
+      accountName __STORAGE_ACCOUNT_NAME__
+      accountKey __STORAGE_ACCOUNT_KEY__
+      containerName insights-logs-appservicehttplogs
+
+  - path: /etc/blobfuse-insights-logs-appserviceplatformlogs.cfg
+    permissions: "0600"
+    content: |
+      accountName __STORAGE_ACCOUNT_NAME__
+      accountKey __STORAGE_ACCOUNT_KEY__
+      containerName insights-logs-appserviceplatformlogs
+
+  - path: /etc/insights-logs-postgresqllogs.cfg
+    permissions: "0600"
+    content: |
+      accountName __STORAGE_ACCOUNT_NAME__
+      accountKey __STORAGE_ACCOUNT_KEY__
+      containerName insights-logs-postgresqllogs
+
+  - path: /etc/insights-logs-postgresqlflexsessions.cfg
+    permissions: "0600"
+    content: |
+      accountName __STORAGE_ACCOUNT_NAME__
+      accountKey __STORAGE_ACCOUNT_KEY__
+      containerName insights-logs-postgresqlflexsessions
+
+  - path: /etc/insights-logs-postgresqlflextablestats.cfg
+    permissions: "0600"
+    content: |
+      accountName __STORAGE_ACCOUNT_NAME__
+      accountKey __STORAGE_ACCOUNT_KEY__
+      containerName insights-logs-postgresqlflextablestats
+
+  - path: /etc/insights-logs-postgresqlflexdatabasexacts.cfg
+    permissions: "0600"
+    content: |
+      accountName __STORAGE_ACCOUNT_NAME__
+      accountKey __STORAGE_ACCOUNT_KEY__
+      containerName insights-logs-postgresqlflexdatabasexacts
 
   - path: /etc/loki/env
     permissions: "0600"
@@ -110,7 +170,7 @@ write_files:
       )
 
       echo "$(date): Arrêt de td-agent-bit"
-      systemctl stop td-agent-bit
+      systemctl stop fluent-bit
 
       for container in "${!mounts[@]}"; do
         IFS=":" read -r mount_point config_file <<< "${mounts[$container]}"
@@ -131,7 +191,7 @@ write_files:
       done
 
       echo "$(date): Redémarrage de td-agent-bit"
-      systemctl start td-agent-bit
+      systemctl start fluent-bit
 
   # =========================
   # CLEAN LOGS SCRIPT
@@ -279,7 +339,7 @@ write_files:
       [OUTPUT]
           Name        loki
           Match       azure.webapp.*
-          Host        4.233.108.2
+          Host        __VM_LOGS_IP__
           Port        3100
           Label_keys  $job,$service,$resourceId
 
@@ -483,14 +543,42 @@ write_files:
       
 
 runcmd:
+  - curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+  - echo "deb [arch=amd64] https://packages.microsoft.com/ubuntu/18.04/prod bionic main" | sudo tee /etc/apt/sources.list.d/microsoft-prod.list
+  - sudo apt update
+  - sudo apt install -y lua-cjson liblua5.1-0
+  - ls /usr/lib/x86_64-linux-gnu/lua/5.1/cjson.so 
+
   - mkdir -p /etc/loki /var/loki/{index,cache,compactor} /mnt/blobfuse_tmp
-  - curl -L -o /usr/local/bin/loki https://github.com/grafana/loki/releases/download/v3.1.0/loki-linux-amd64
-  - chmod +x /usr/local/bin/loki
+  - mkdir -p /mnt/blobfuse_tmp
+  - chmod 777 /mnt/blobfuse_tmp
+  # Installation et configuration de Loki
+  - sudo apt install unzip
+  - cd /tmp
+  - wget https://github.com/grafana/loki/releases/download/v2.9.1/loki-linux-amd64.zip
+  - unzip loki-linux-amd64.zip
+  - chmod +x loki-linux-amd64
+  - sudo mv loki-linux-amd64 /usr/local/bin/loki
+  - sudo mkdir -p /var/loki/compactor
+  - sudo chown -R azureuser:azureuser /var/loki
+
+  - sudo systemctl daemon-reload
+  - sudo systemctl enable loki
+  - sudo systemctl start loki
+
   - echo "vm.swappiness=10" >> /etc/sysctl.conf
   - echo "vm.max_map_count=262144" >> /etc/sysctl.conf
   - sysctl -p
+  # =========================
+  # Installation Fluent Bit 4.0.0
+  # =========================
+  - curl -fsSL https://raw.githubusercontent.com/fluent/fluent-bit/master/install.sh | sudo sh
+  - echo 'export PATH=$PATH:/opt/fluent-bit/bin' >> /etc/profile.d/fluent-bit.sh
+  - source /etc/profile.d/fluent-bit.sh
+ 
   - systemctl daemon-reexec
-  - systemctl enable loki td-agent-bit
-  - systemctl start loki td-agent-bit
+  - systemctl enable loki fluent-bit
+  - systemctl start loki
+  - systemctl start fluent-bit
   - echo "*/5 * * * * root flock -n /tmp/blobfuse.lock /etc/blobfuse-mount.sh >> /var/log/blobfuse-mount.log 2>&1" > /etc/cron.d/blobfuse-mount
   - echo "0 3 * * * root flock -n /tmp/clean.lock /etc/clean-old-logs.sh >> /var/log/clean-old-logs.log 2>&1" > /etc/cron.d/clean-old-logs

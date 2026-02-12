@@ -7,7 +7,8 @@ output "private_ip" {
 }
 
 output "public_ip_address" {
-  value = azurerm_public_ip.this.ip_address
+  description = "Public IP of the VM metrics"
+  value       = azurerm_public_ip.this.ip_address
 }
 
 output "grafana_url" {

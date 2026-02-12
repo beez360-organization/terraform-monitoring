@@ -39,5 +39,14 @@ variable "data_disk_size_gb" {
   default     = 50
 }
 
-variable "loki_config_path" {}
-variable "tempo_config_path" {}
+
+variable "storage_account_key" {
+  type        = string
+  description = "Primary key of the storage account"
+}
+
+variable "storage_account_name" {
+  type        = string
+  description = "Name of the storage account"
+}
+

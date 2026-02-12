@@ -1,3 +1,11 @@
+
+data "azurerm_resource_group" "this" {
+  name = var.resource_group_name
+}
+
+##############################
+# Storage Account
+##############################
 resource "azurerm_storage_account" "this" {
   name                     = var.storage_account_name
   resource_group_name      = var.resource_group_name
@@ -9,7 +17,6 @@ resource "azurerm_storage_account" "this" {
   https_traffic_only_enabled = true
   min_tls_version            = "TLS1_2"
 
-
   blob_properties {
     delete_retention_policy {
       days = 7
@@ -17,8 +24,14 @@ resource "azurerm_storage_account" "this" {
   }
 
   tags = var.tags
+    depends_on = [
+    data.azurerm_resource_group.this
+  ]
 }
 
+##############################
+# Containers
+##############################
 resource "azurerm_storage_container" "logs" {
   name                  = "loki-logs"
   storage_account_name  = azurerm_storage_account.this.name
@@ -31,8 +44,4 @@ resource "azurerm_storage_container" "traces" {
   container_access_type = "private"
 }
 
-data "azurerm_storage_account" "beez360" {
-  name                = var.storage_account_name
-  resource_group_name  = var.resource_group_name
-}
 
