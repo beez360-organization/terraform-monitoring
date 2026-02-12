@@ -47,7 +47,7 @@ jobs:
 
 
       - name: Terraform Plan
-        run: terraform plan -lock-timeout=5m -var-file=terraform.tfvars
+        run: terraform plan -lock-timeout=5m 
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve -var-file=terraform.tfvars
+        run: terraform apply -auto-approve 
