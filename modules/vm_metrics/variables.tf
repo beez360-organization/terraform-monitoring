@@ -55,9 +55,7 @@ variable "node_exporter_target" {
   type = string
 }
 
-variable "promitor_target" {
-  type = string
-}
+
 
 variable "prometheus_url" {
   type        = string
