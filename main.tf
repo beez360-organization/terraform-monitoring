@@ -13,6 +13,8 @@ terraform {
     storage_account_name = "tfstatebeez360"
     container_name       = "tfstate"
     key                  = "monitoring.tfstate"
+
+    use_oidc = true
   }
 }
 
