@@ -154,13 +154,13 @@ write_files:
       - name: Prometheus
         type: prometheus
         access: proxy
-        url: http://__PROM_URL__:9090
+        url: __PROM_URL__
         isDefault: true
 
       - name: Loki
         type: loki
         access: proxy
-        url: http://__LOKI_URL__:3100
+        url: __LOKI_URL__
 
 
   # Promitor metrics declaration (Azure)
