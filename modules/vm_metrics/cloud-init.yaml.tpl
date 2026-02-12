@@ -145,20 +145,23 @@ write_files:
           static_configs:
             - targets: ['__PROM_PROMITOR__']
 
-  # Grafana dashboards provisioning
-  - path: /etc/grafana/provisioning/dashboards/default.yaml
+
+  - path: /etc/grafana/provisioning/datasources/default.yaml
     permissions: '0644'
     content: |
       apiVersion: 1
-      providers:
-        - name: default
-          orgId: 1
-          folder: ""
-          type: file
-          disableDeletion: false
-          editable: true
-          options:
-            path: /var/lib/grafana/dashboards
+      datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://__PROM_URL__:9090
+        isDefault: true
+
+      - name: Loki
+        type: loki
+        access: proxy
+        url: http://__LOKI_URL__:3100
+
 
   # Promitor metrics declaration (Azure)
   - path: /config/metrics-declaration.yaml
