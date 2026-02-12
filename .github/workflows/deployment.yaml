@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Azure Login
+      - name: Azure Login (OIDC)
         uses: azure/login@v1
         with:
           client-id: ${{ secrets.CLIENT_ID_MONITOR }}
@@ -30,18 +30,38 @@ jobs:
       # ---------- BOOTSTRAP BACKEND ----------
       - name: Terraform Bootstrap Init
         working-directory: bootstrap
+        env:
+          ARM_CLIENT_ID: ${{ secrets.CLIENT_ID_MONITOR }}
+          ARM_TENANT_ID: ${{ secrets.TENANT_ID_MONITOR }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID_MONITOR }}
         run: terraform init
 
       - name: Terraform Bootstrap Apply
         working-directory: bootstrap
+        env:
+          ARM_CLIENT_ID: ${{ secrets.CLIENT_ID_MONITOR }}
+          ARM_TENANT_ID: ${{ secrets.TENANT_ID_MONITOR }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID_MONITOR }}
         run: terraform apply -auto-approve
 
       # ---------- REAL STACK ----------
       - name: Terraform Init
-        run: terraform init -reconfigure
+        env:
+          ARM_CLIENT_ID: ${{ secrets.CLIENT_ID_MONITOR }}
+          ARM_TENANT_ID: ${{ secrets.TENANT_ID_MONITOR }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID_MONITOR }}
+        run: terraform init
 
       - name: Terraform Plan
+        env:
+          ARM_CLIENT_ID: ${{ secrets.CLIENT_ID_MONITOR }}
+          ARM_TENANT_ID: ${{ secrets.TENANT_ID_MONITOR }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID_MONITOR }}
         run: terraform plan -var-file=terraform.tfvars
 
       - name: Terraform Apply
+        env:
+          ARM_CLIENT_ID: ${{ secrets.CLIENT_ID_MONITOR }}
+          ARM_TENANT_ID: ${{ secrets.TENANT_ID_MONITOR }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID_MONITOR }}
         run: terraform apply -auto-approve -var-file=terraform.tfvars
