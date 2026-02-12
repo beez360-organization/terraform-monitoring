@@ -1,0 +1,8 @@
+admin_username          = "azureuser"
+admin_password          = "Admin1!"
+logs_traces_subnet_cidr = "10.0.2.0/24"
+metrics_subnet_cidr     = "10.0.1.0/24"
+prefix                  = "beez360"
+resource_group_name     = "rg-monitoring"
+storage_account_name    = "beez360storage"
+vnet_cidr               = "10.0.0.0/16"
