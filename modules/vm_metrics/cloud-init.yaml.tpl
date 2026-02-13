@@ -43,11 +43,10 @@ write_files:
     permissions: '0755'
     content: |
       #!/bin/bash
-      GRAF_VERSION="12.3.2"
       wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | tee /usr/share/keyrings/grafana.gpg > /dev/null
       echo "deb [signed-by=/usr/share/keyrings/grafana.gpg] https://apt.grafana.com stable main" | tee /etc/apt/sources.list.d/grafana.list
       apt-get update
-      apt-get install -y grafana=${GRAF_VERSION}
+      apt-get install -y grafana
       systemctl daemon-reload
       systemctl enable grafana-server
       systemctl start grafana-server
@@ -479,7 +478,6 @@ runcmd:
 
   - mkdir -p /etc/grafana/dashboards
   - mkdir -p /var/lib/grafana/dashboards
-  - chown -R grafana:grafana /var/lib/grafana/dashboards
 
   - wget -q -O /var/lib/grafana/dashboards/loki-dashboard.json https://raw.githubusercontent.com/grafana/loki/main/production/helm/loki-stack/templates/grafana/dashboards/loki-dashboard.json
   - wget -q -O /var/lib/grafana/dashboards/tempo-dashboard.json https://raw.githubusercontent.com/grafana/tempo/main/production/helm/tempo/templates/grafana/dashboards/tempo-dashboard.json
@@ -495,6 +493,7 @@ runcmd:
 
   - /usr/local/bin/install_grafana.sh
   - systemctl enable --now grafana-server
+  - chown -R grafana:grafana /var/lib/grafana/dashboards
 
   - systemctl enable --now promitor.service
 
@@ -508,14 +507,15 @@ runcmd:
 
   - |
     api_key=$(curl -s -X POST __GRAFANA_URL__/api/auth/keys \
-      -u admin:${ADMIN_PASSWORD} \
+      -u admin:admin \
       -H "Content-Type: application/json" \
       -d '{"name":"terraform-import","role":"Admin","secondsToLive":86400}' | jq -r '.key')
     echo $api_key > /etc/grafana/api_key
 
   - systemctl enable --now grafana-import.service
-
   - |
+    api_key=$(cat /etc/grafana/api_key)
+
     curl -s -X POST __GRAFANA_URL__/api/datasources \
       -H "Content-Type: application/json" \
       -H "Authorization: Bearer $api_key" \
@@ -528,6 +528,8 @@ runcmd:
       }'
 
   - |
+    api_key=$(cat /etc/grafana/api_key)
+
     curl -s -X POST __GRAFANA_URL__/api/datasources \
       -H "Content-Type: application/json" \
       -H "Authorization: Bearer $api_key" \
