@@ -18,16 +18,16 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 7,
+  "id": 1,
   "links": [
     {
-      "asDropdown": false,
+      "asDropdown": true,
       "icon": "external link",
       "includeVars": false,
       "keepTime": false,
       "tags": [],
       "targetBlank": false,
-      "title": "Link2",
+      "title": "other dashboards",
       "tooltip": "",
       "type": "dashboards",
       "url": ""
@@ -37,7 +37,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "ef9xgrjin3yf4b"
+        "uid": "PBFA97CFB590B2093"
       },
       "fieldConfig": {
         "defaults": {
@@ -91,7 +91,7 @@
         "textMode": "value_and_name",
         "wideLayout": false
       },
-      "pluginVersion": "12.3.1",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -114,7 +114,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "ef9xgrjin3yf4b"
+        "uid": "PBFA97CFB590B2093"
       },
       "fieldConfig": {
         "defaults": {
@@ -211,7 +211,7 @@
           "sort": "asc"
         }
       },
-      "pluginVersion": "12.3.1",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -233,7 +233,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "bf9gi4arny1ogb"
+        "uid": "P8E80F9AEF21F6940"
       },
       "fieldConfig": {
         "defaults": {
@@ -241,53 +241,14 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 25,
-            "gradientMode": "none",
             "hideFrom": {
               "legend": false,
               "tooltip": false,
               "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "showValues": false,
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "normal"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
             }
           },
           "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
+          "unit": "short"
         },
         "overrides": []
       },
@@ -300,50 +261,54 @@
       "id": 5,
       "interval": "1h",
       "options": {
+        "displayLabels": [
+          "percent"
+        ],
         "legend": {
           "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
+          "displayMode": "hidden",
+          "placement": "right",
+          "showLegend": false,
+          "values": []
         },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "sort": "desc",
         "tooltip": {
           "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
-      "pluginVersion": "12.3.1",
+      "pluginVersion": "12.3.3",
       "targets": [
-        {
-          "direction": "backward",
-          "editorMode": "code",
-          "expr": "count_over_time({job=\"azure-webapp\", resourceId=~\".*API.*\"} |= `Error` or `error` [2h])",
-          "legendFormat": "error",
-          "queryType": "range",
-          "refId": "A"
-        },
         {
           "datasource": {
             "type": "loki",
-            "uid": "bf9gi4arny1ogb"
+            "uid": "P8E80F9AEF21F6940"
           },
           "direction": "backward",
           "editorMode": "code",
-          "expr": "count_over_time({job=\"azure-webapp\", resourceId=~\".*API.*\"}\r\n |= `info` [2h])",
+          "expr": "count_over_time({job=\"eventhub\"}[1h])",
           "hide": false,
-          "legendFormat": "info",
           "queryType": "range",
-          "refId": "B"
+          "refId": "A"
         }
       ],
       "title": "Nombre de logs Info & error",
       "transparent": true,
-      "type": "timeseries"
+      "type": "piechart"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "ef9xgrjin3yf4b"
+        "uid": "PBFA97CFB590B2093"
       },
       "fieldConfig": {
         "defaults": {
@@ -421,7 +386,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.3.1",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
@@ -443,7 +408,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "bf9gi4arny1ogb"
+        "uid": "P8E80F9AEF21F6940"
       },
       "fieldConfig": {
         "defaults": {},
@@ -474,91 +439,23 @@
         "sortOrder": "Descending",
         "wrapLogMessage": false
       },
-      "pluginVersion": "12.3.1",
+      "pluginVersion": "12.3.3",
       "targets": [
         {
           "datasource": {
             "type": "loki",
-            "uid": "bf9gi4arny1ogb"
+            "uid": "P8E80F9AEF21F6940"
           },
           "direction": "backward",
-          "editorMode": "code",
-          "expr": "{job=\"azure-webapp\", resourceId=~\".*API.*\"}\r\n |= `Error` ",
+          "editorMode": "builder",
+          "expr": "{job=\"eventhub\"} | json",
           "hide": false,
-          "queryType": "range",
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "bf9gi4arny1ogb"
-          },
-          "direction": "backward",
-          "editorMode": "code",
-          "expr": "{job=\"azure-webapp\", resourceId=~\".*API.*\"}\r\n |= `error` ",
-          "hide": false,
-          "queryType": "range",
-          "refId": "C"
-        },
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "bf9gi4arny1ogb"
-          },
-          "direction": "backward",
-          "editorMode": "code",
-          "expr": "{job=\"azure-webapp\", resourceId=~\".*API.*\"} |= `ERROR`\r\n\r\n",
-          "hide": false,
-          "queryType": "range",
-          "refId": "D"
-        }
-      ],
-      "title": "Error Logs",
-      "transparent": true,
-      "type": "logs"
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "bf9gi4arny1ogb"
-      },
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 11,
-        "w": 24,
-        "x": 0,
-        "y": 34
-      },
-      "id": 1,
-      "options": {
-        "dedupStrategy": "none",
-        "enableInfiniteScrolling": false,
-        "enableLogDetails": true,
-        "showControls": false,
-        "showLabels": false,
-        "showTime": true,
-        "sortOrder": "Descending",
-        "timestampResolution": "ms",
-        "wrapLogMessage": false
-      },
-      "pluginVersion": "12.3.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "bf9gi4arny1ogb"
-          },
-          "direction": "backward",
-          "editorMode": "code",
-          "expr": "{job=\"azure-webapp\", resourceId=~\".*API.*\"}\r\n |= `info` | json\r\n| line_format \"{{.time}} {{if .CsMethod}}HTTP {{.CsMethod}} {{.CsUriStem}} {{.ScStatus}}{{else}}APP {{.message}}{{end}}\"",
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "title": "Info Logs",
+      "title": " Logs",
+      "transparent": true,
       "type": "logs"
     }
   ],
@@ -569,12 +466,12 @@
     "list": []
   },
   "time": {
-    "from": "now-1h",
+    "from": "now-5m",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "Europe/Paris",
   "title": "Beez360 Api Visualization",
   "uid": "ad2mlcb",
-  "version": 84
+  "version": 27
 }

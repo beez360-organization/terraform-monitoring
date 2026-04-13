@@ -1,198 +1,204 @@
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 3.0"
+    }
+  }
+}
+
+provider "azurerm" {
+  features {}
+}
+
+##############################
+# NSG
+##############################
 resource "azurerm_network_security_group" "nsg" {
   name                = "${var.vm_name}-nsg"
   location            = var.location
   resource_group_name = var.resource_group_name
   tags                = var.tags
 
-  # =========================
-  # Inbound rules
-  # =========================
+  # Prometheus
   security_rule {
     name                       = "AllowPrometheus"
     priority                   = 100
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "9090"
-    source_address_prefix      = "*"
+    source_port_range         = "*"
+    destination_port_range    = "9090"
+    source_address_prefix     = "*"
     destination_address_prefix = "*"
   }
-security_rule {
-  name                       = "AllowPromitor"
-  priority                   = 115
-  direction                  = "Inbound"
-  access                     = "Allow"
-  protocol                   = "Tcp"
-  source_port_range          = "*"
-  destination_port_range     = "8080"
-  source_address_prefix      = "*"
-  destination_address_prefix = "*"
-}
-security_rule {
-  name                       = "AllowNodeExporter"
-  priority                   = 105
-  direction                  = "Inbound"
-  access                     = "Allow"
-  protocol                   = "Tcp"
-  source_port_range          = "*"
-  destination_port_range     = "9100"
-  source_address_prefix      = "*"
-  destination_address_prefix = "*"
-}
 
+  # Node Exporter
   security_rule {
-    name                       = "AllowGrafana"
+    name                       = "AllowNodeExporter"
     priority                   = 110
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "3000"
-    source_address_prefix      = "*"
+    source_port_range         = "*"
+    destination_port_range    = "9100"
+    source_address_prefix     = "*"
     destination_address_prefix = "*"
   }
 
+  # Grafana
   security_rule {
-    name                       = "AllowLoki"
+    name                       = "AllowGrafana"
     priority                   = 120
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "3100"
-    source_address_prefix      = "*"
+    source_port_range         = "*"
+    destination_port_range    = "3000"
+    source_address_prefix     = "*"
     destination_address_prefix = "*"
   }
 
+  # Promitor
   security_rule {
-    name                       = "AllowTempo"
+    name                       = "AllowPromitor"
     priority                   = 130
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "3200"
-    source_address_prefix      = "*"
+    source_port_range         = "*"
+    destination_port_range    = "8080"
+    source_address_prefix     = "*"
     destination_address_prefix = "*"
   }
 
+  # Loki
   security_rule {
-    name                       = "AllowSSH"
+    name                       = "AllowLoki"
     priority                   = 140
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "22"
-    source_address_prefix      = "*"
+    source_port_range         = "*"
+    destination_port_range    = "3100"
+    source_address_prefix     = "*"
     destination_address_prefix = "*"
   }
 
+  # Tempo
   security_rule {
-    name                       = "Consul"
+    name                       = "AllowTempo"
     priority                   = 150
     direction                  = "Inbound"
     access                     = "Allow"
-    protocol                   = "*"
-    source_port_range          = "*"
-    destination_port_range     = "8500"
-    source_address_prefix      = "*"
+    protocol                   = "Tcp"
+    source_port_range         = "*"
+    destination_port_range    = "3200"
+    source_address_prefix     = "*"
     destination_address_prefix = "*"
   }
 
+  # SSH
+  security_rule {
+    name                       = "AllowSSH"
+    priority                   = 160
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range         = "*"
+    destination_port_range    = "22"
+    source_address_prefix     = "*"
+    destination_address_prefix = "*"
+  }
+
+  # VNet
   security_rule {
     name                       = "AllowVnetInBound"
     priority                   = 2000
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "*"
-    source_port_range          = "*"
-    destination_port_range     = "*"
-    source_address_prefix      = "VirtualNetwork"
+    source_port_range         = "*"
+    destination_port_range    = "*"
+    source_address_prefix     = "VirtualNetwork"
     destination_address_prefix = "VirtualNetwork"
   }
 
+  # Azure LB
   security_rule {
-    name                       = "AllowAzureLoadBalancerInBound"
+    name                       = "AllowAzureLoadBalancer"
     priority                   = 2001
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "*"
-    source_port_range          = "*"
-    destination_port_range     = "*"
-    source_address_prefix      = "AzureLoadBalancer"
+    source_port_range         = "*"
+    destination_port_range    = "*"
+    source_address_prefix     = "AzureLoadBalancer"
     destination_address_prefix = "*"
   }
 
+  # Deny all inbound
   security_rule {
     name                       = "DenyAllInBound"
     priority                   = 3000
     direction                  = "Inbound"
     access                     = "Deny"
     protocol                   = "*"
-    source_port_range          = "*"
-    destination_port_range     = "*"
-    source_address_prefix      = "*"
+    source_port_range         = "*"
+    destination_port_range    = "*"
+    source_address_prefix     = "*"
     destination_address_prefix = "*"
   }
 
-  # =========================
-  # Outbound rules
-  # =========================
-  security_rule {
-    name                       = "AllowVnetOutBound"
-    priority                   = 2000
-    direction                  = "Outbound"
-    access                     = "Allow"
-    protocol                   = "*"
-    source_port_range          = "*"
-    destination_port_range     = "*"
-    source_address_prefix      = "VirtualNetwork"
-    destination_address_prefix = "VirtualNetwork"
-  }
-
+  # OUTBOUND (corrigé)
   security_rule {
     name                       = "AllowInternetOutBound"
-    priority                   = 2001
+    priority                   = 100
     direction                  = "Outbound"
     access                     = "Allow"
     protocol                   = "*"
-    source_port_range          = "*"
-    destination_port_range     = "*"
-    source_address_prefix      = "*"
+    source_port_range         = "*"
+    destination_port_range    = "*"
+    source_address_prefix     = "*"
     destination_address_prefix = "*"
   }
 
   security_rule {
     name                       = "DenyAllOutBound"
-    priority                   = 3000
+    priority                   = 4000
     direction                  = "Outbound"
     access                     = "Deny"
     protocol                   = "*"
-    source_port_range          = "*"
-    destination_port_range     = "*"
-    source_address_prefix      = "*"
+    source_port_range         = "*"
+    destination_port_range    = "*"
+    source_address_prefix     = "*"
     destination_address_prefix = "*"
   }
 }
 
-resource "azurerm_subnet_network_security_group_association" "nsg_association" {
+##############################
+# NSG association
+##############################
+resource "azurerm_subnet_network_security_group_association" "nsg_assoc" {
   subnet_id                 = var.subnet_id
   network_security_group_id = azurerm_network_security_group.nsg.id
 }
 
 ##############################
-# Public IP + NIC
+# Public IP
 ##############################
 resource "azurerm_public_ip" "this" {
-  name                = "${var.vm_name}-public-ip"
+  name                = "${var.vm_name}-pip"
   location            = var.location
   resource_group_name = var.resource_group_name
   allocation_method   = "Static"
   sku                 = "Standard"
+  tags                = var.tags
 }
 
+##############################
+# NIC
+##############################
 resource "azurerm_network_interface" "this" {
   name                = "${var.vm_name}-nic"
   location            = var.location
@@ -204,44 +210,40 @@ resource "azurerm_network_interface" "this" {
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id          = azurerm_public_ip.this.id
   }
+
+  tags = var.tags
 }
-
-locals {
-  cloud_init_step1 = replace(
-    replace(
-      replace(
-        replace(
-          file("${path.module}/cloud-init.yaml.tpl"),
-          "__GRAFANA_URL__", var.grafana_url
-        ),
-        "__PROM_URL__", var.prometheus_url
-      ),
-      "__LOKI_URL__", var.loki_url
-    ),
-    "__PROM_NODE_EXPORTER__", var.node_exporter_target
-  )
-
-  cloud_init = replace(
-    local.cloud_init_step1,
-    "__PROM_PROMITOR__", var.promitor_target
-  )
-}
-
-
 
 ##############################
-# VM Linux avec Managed Identity
+# Cloud-init
+##############################
+locals {
+  cloud_init = templatefile("${path.module}/cloud-init.yaml.tpl", {
+    GRAFANA_URL        = var.grafana_url
+    PROM_URL           = var.prometheus_url
+    LOKI_URL           = var.loki_url
+    PROM_NODE_EXPORTER = var.node_exporter_target
+    PROM_PROMITOR      = var.promitor_target
+    GITHUB_SSH_KEY     = var.github_ssh_key
+  })
+}
+
+##############################
+# VM
 ##############################
 resource "azurerm_linux_virtual_machine" "this" {
   name                = var.vm_name
-  resource_group_name = var.resource_group_name
   location            = var.location
+  resource_group_name = var.resource_group_name
   size                = "Standard_B2s"
-  admin_username      = var.admin_username
-  admin_password      = var.admin_password
+
+  admin_username                  = var.admin_username
+  admin_password                  = var.admin_password
   disable_password_authentication = false
 
-  network_interface_ids = [azurerm_network_interface.this.id]
+  network_interface_ids = [
+    azurerm_network_interface.this.id
+  ]
 
   os_disk {
     caching              = "ReadWrite"

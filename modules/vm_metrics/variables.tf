@@ -39,7 +39,7 @@ variable "data_disk_size_gb" {
 }
 
 variable "prometheus_target_ip" {
-  description = "IP address of the Prometheus target (vm_metrics or vm_logs_traces depending on context)"
+  description = "IP address of the Prometheus target "
   type        = string
 } 
 variable "grafana_url" {

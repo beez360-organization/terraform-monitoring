@@ -17,7 +17,7 @@ terraform {
     use_oidc = true
   }
 }
-
+data "azurerm_client_config" "current" {}
 provider "azurerm" {
   features {}
     use_oidc = true
@@ -51,6 +51,17 @@ module "storage" {
 
   depends_on = [azurerm_resource_group.rg]
 }
+module "keyvault" {
+  source = "./modules/keyvault"
+
+  prefix              = var.prefix
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  tenant_id           = data.azurerm_client_config.current.tenant_id
+
+  storage_account_key = module.storage.primary_access_key
+  tags                = var.tags
+}
 
 module "vm_logs_traces" {
   source               = "./modules/vm_logs_traces"
@@ -62,7 +73,9 @@ module "vm_logs_traces" {
   admin_password       = var.admin_password
   storage_account_name = module.storage.storage_account_name
   storage_account_key  = module.storage.primary_access_key
+  key_vault_name = module.keyvault.key_vault_name
   tags                 = var.tags
+  vm_principal_id = module.vm_logs_traces.principal_id
 
   depends_on = [module.storage]
 }

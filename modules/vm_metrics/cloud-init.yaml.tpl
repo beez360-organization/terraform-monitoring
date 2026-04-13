@@ -474,18 +474,22 @@ write_files:
             transformation: None
 
 runcmd:
+  - apt-get update && apt-get install -y git openssh-client
+  - apt-get install -y docker.io
+  - mkdir -p /root/.ssh
+  - echo "__GITHUB_SSH_KEY__" > /root/.ssh/id_rsa
+  - chmod 600 /root/.ssh/id_rsa
+  - ssh-keyscan github.com >> /root/.ssh/known_hosts
+
+  - git clone git@github.com:beez360-organization/terraform-monitoring.git /opt/terraform-monitoring
+
+  - mkdir -p /var/lib/grafana/dashboards
+  - cp /opt/terraform-monitoring/dashboards/*.json /var/lib/grafana/dashboards/ || true
+
   - systemctl enable --now docker
 
   - mkdir -p /etc/grafana/dashboards
   - mkdir -p /var/lib/grafana/dashboards
-
-  - wget -q -O /var/lib/grafana/dashboards/loki-dashboard.json https://raw.githubusercontent.com/grafana/loki/main/production/helm/loki-stack/templates/grafana/dashboards/loki-dashboard.json
-  - wget -q -O /var/lib/grafana/dashboards/tempo-dashboard.json https://raw.githubusercontent.com/grafana/tempo/main/production/helm/tempo/templates/grafana/dashboards/tempo-dashboard.json
-  - curl -fsSL -o /var/lib/grafana/dashboards/api-dashboard.json https://raw.githubusercontent.com/beez360-organization/terraform-monitoring/main/dashboards/api-dashboard.json
-  - curl -fsSL -o /var/lib/grafana/dashboards/backoffice.json https://raw.githubusercontent.com/beez360-organization/terraform-monitoring/main/dashboards/backoffice.json
-  - curl -fsSL -o /var/lib/grafana/dashboards/c_c.json https://raw.githubusercontent.com/beez360-organization/terraform-monitoring/main/dashboards/c_c.json
-  - curl -fsSL -o /var/lib/grafana/dashboards/global-informations.json https://raw.githubusercontent.com/beez360-organization/terraform-monitoring/main/dashboards/global-informations.json
-  - curl -fsSL -o /var/lib/grafana/dashboards/postgres.json https://raw.githubusercontent.com/beez360-organization/terraform-monitoring/main/dashboards/postgres.json
 
   - /usr/local/bin/install_prometheus.sh
   - systemctl daemon-reload
@@ -500,43 +504,44 @@ runcmd:
   - systemctl restart grafana-server
 
   - |
-    until curl -s __GRAFANA_URL__/api/health | jq -e '.database=="ok"' > /dev/null; do
-      echo "Waiting for Grafana..."
-      sleep 5
-    done
+      until curl -s __GRAFANA_URL__/api/health | jq -e '.database=="ok"' > /dev/null; do
+        echo "Waiting for Grafana..."
+        sleep 5
+      done
 
   - |
-    api_key=$(curl -s -X POST __GRAFANA_URL__/api/auth/keys \
-      -u admin:admin \
-      -H "Content-Type: application/json" \
-      -d '{"name":"terraform-import","role":"Admin","secondsToLive":86400}' | jq -r '.key')
-    echo $api_key > /etc/grafana/api_key
+      api_key=$(curl -s -X POST __GRAFANA_URL__/api/auth/keys \
+        -u admin:admin \
+        -H "Content-Type: application/json" \
+        -d '{"name":"terraform-import","role":"Admin","secondsToLive":86400}' | jq -r '.key')
+      echo $api_key > /etc/grafana/api_key
 
   - systemctl enable --now grafana-import.service
-  - |
-    api_key=$(cat /etc/grafana/api_key)
-
-    curl -s -X POST __GRAFANA_URL__/api/datasources \
-      -H "Content-Type: application/json" \
-      -H "Authorization: Bearer $api_key" \
-      -d '{
-        "name":"Prometheus",
-        "type":"prometheus",
-        "url":"http://__PROM_URL__:9090",
-        "access":"proxy",
-        "basicAuth":false
-      }'
 
   - |
-    api_key=$(cat /etc/grafana/api_key)
+      api_key=$(cat /etc/grafana/api_key)
 
-    curl -s -X POST __GRAFANA_URL__/api/datasources \
-      -H "Content-Type: application/json" \
-      -H "Authorization: Bearer $api_key" \
-      -d '{
-        "name":"Loki",
-        "type":"loki",
-        "url": "__LOKI_URL__",
-        "access":"proxy",
-        "basicAuth":false
-      }'
+      curl -s -X POST __GRAFANA_URL__/api/datasources \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer $api_key" \
+        -d '{
+          "name":"Prometheus",
+          "type":"prometheus",
+          "url":"http://__PROM_URL__:9090",
+          "access":"proxy",
+          "basicAuth":false
+        }'
+
+  - |
+      api_key=$(cat /etc/grafana/api_key)
+
+      curl -s -X POST __GRAFANA_URL__/api/datasources \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer $api_key" \
+        -d '{
+          "name":"Loki",
+          "type":"loki",
+          "url":"__LOKI_URL__",
+          "access":"proxy",
+          "basicAuth":false
+        }'
