@@ -1,7 +1,7 @@
 output "vm_id" {
   description = "ID de la VM Logs/Traces"
   value       = azurerm_linux_virtual_machine.this.id
-
+}
 
 output "private_ip" {
   description = "IP privée de la VM Logs/Traces"
