@@ -2,7 +2,7 @@ name: Terraform Azure Deployment
 
 on:
   push:
-    branches: [fix/config-cloud-init-yaml-]
+    branches: [main]
 
 permissions:
   contents: read
