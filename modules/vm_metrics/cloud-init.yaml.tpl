@@ -31,12 +31,11 @@ write_files:
       useradd --no-create-home --shell /bin/false prometheus || true
       mkdir -p /etc/prometheus /var/lib/prometheus
       chown -R prometheus:prometheus /etc/prometheus /var/lib/prometheus
-      wget -q https://github.com/prometheus/prometheus/releases/download/v${PROM_VERSION}/prometheus-${PROM_VERSION}.linux-amd64.tar.gz -O /tmp/prometheus.tar.gz
-      tar xzf /tmp/prometheus.tar.gz -C /tmp/
-      cp /tmp/prometheus-${PROM_VERSION}.linux-amd64/prometheus ${PROM_DIR}/
-      cp /tmp/prometheus-${PROM_VERSION}.linux-amd64/promtool ${PROM_DIR}/
-      chmod +x ${PROM_DIR}/prometheus ${PROM_DIR}/promtool
-      chown prometheus:prometheus ${PROM_DIR}/prometheus ${PROM_DIR}/promtool
+      wget -q https://github.com/prometheus/prometheus/releases/download/v$${PROM_VERSION}/prometheus-$${PROM_VERSION}.linux-amd64.tar.gz -O /tmp/prometheus.tar.gz
+      tar xzf /tmp/prometheus.tar.gz -C /tmp/      cp /tmp/prometheus-$${PROM_VERSION}.linux-amd64/prometheus $${PROM_DIR}/
+      cp /tmp/prometheus-$${PROM_VERSION}.linux-amd64/promtool $${PROM_DIR}/
+      chmod +x $${PROM_DIR}/prometheus $${PROM_DIR}/promtool
+      chown prometheus:prometheus $${PROM_DIR}/prometheus $${PROM_DIR}/promtool
 
   # Grafana installation script
   - path: /usr/local/bin/install_grafana.sh
@@ -476,11 +475,13 @@ write_files:
 runcmd:
   - apt-get update && apt-get install -y git openssh-client
   - apt-get install -y docker.io
-  - mkdir -p /root/.ssh
-  - echo "${GITHUB_SSH_KEY}" > /root/.ssh/id_rsa
-  - chmod 600 /root/.ssh/id_rsa
-  - ssh-keyscan github.com >> /root/.ssh/known_hosts
-
+  - |
+    mkdir -p /root/.ssh
+    cat <<EOF > /root/.ssh/id_rsa
+    ${GITHUB_SSH_KEY}
+    EOF
+    chmod 600 /root/.ssh/id_rsa
+    ssh-keyscan github.com >> /root/.ssh/known_hosts
   - git clone git@github.com:beez360-organization/terraform-monitoring.git /opt/terraform-monitoring
 
   - mkdir -p /var/lib/grafana/dashboards
