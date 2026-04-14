@@ -72,7 +72,6 @@ module "keyvault" {
   storage_account_key = module.storage.primary_access_key
   tags                = var.tags
 }
-
 module "vm_logs_traces" {
   source               = "./modules/vm_logs_traces"
   resource_group_name  = var.resource_group_name
