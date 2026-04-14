@@ -131,7 +131,7 @@ write_files:
           rdkafka.security.protocol SASL_SSL
           rdkafka.sasl.mechanisms PLAIN
           rdkafka.sasl.username $ConnectionString
-          rdkafka.sasl.password Endpoint=sb://evh-beez360-monitoring-dev.servicebus.windows.net/;SharedAccessKeyName=alloy-read;SharedAccessKey=XXXX;EntityPath=logs-appservice
+          rdkafka.sasl.password ${eventhub_sas}
           rdkafka.enable.ssl.certificate.verification false
           rdkafka.auto.offset.reset earliest
 
@@ -144,7 +144,7 @@ write_files:
       [OUTPUT]
           Name loki
           Match *
-          Host __LOKI_HOST__
+          Host ${loki_host}
           Port 3100
           Labels job=eventhub
           Line_Format json
@@ -226,9 +226,9 @@ runcmd:
   - /usr/local/bin/install_kafkacat.sh
 
   # Loki install
-  - wget -q https://github.com/grafana/loki/releases/download/v2.9.1/loki-linux-amd64.zip -O /tmp/loki.zip
-  - unzip /tmp/loki.zip -d /tmp
-  - mv /tmp/loki-linux-amd64 /usr/local/bin/loki
+  - wget -O /tmp/loki.zip https://github.com/grafana/loki/releases/download/v2.9.1/loki-linux-amd64.zip
+  - unzip -o /tmp/loki.zip -d /tmp
+  - install -m 755 /tmp/loki-linux-amd64 /usr/local/bin/loki 
   - chmod +x /usr/local/bin/loki
 
   # dirs
@@ -241,8 +241,12 @@ runcmd:
   - systemctl start loki
 
   # Fluent-bit install
-  - curl -fsSL https://raw.githubusercontent.com/fluent/fluent-bit/master/install.sh | sh
+  - curl -fsSL https://packages.fluentbit.io/fluentbit.key | gpg --dearmor -o /usr/share/keyrings/fluentbit.gpg
 
+  - echo "deb [signed-by=/usr/share/keyrings/fluentbit.gpg] https://packages.fluentbit.io/ubuntu/jammy jammy main" | tee /etc/apt/sources.list.d/fluent-bit.list
+
+  - apt-get update
+  - apt-get install -y fluent-bit
   - mkdir -p /etc/systemd/system/fluent-bit.service.d
   - echo "[Service]" > /etc/systemd/system/fluent-bit.service.d/override.conf
   - echo "ExecStart=" >> /etc/systemd/system/fluent-bit.service.d/override.conf

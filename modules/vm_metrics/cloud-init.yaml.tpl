@@ -26,16 +26,26 @@ write_files:
     permissions: '0755'
     content: |
       #!/bin/bash
+      set -e
+
       PROM_VERSION="2.49.0"
-      PROM_DIR="/usr/local/bin"
+
       useradd --no-create-home --shell /bin/false prometheus || true
+
       mkdir -p /etc/prometheus /var/lib/prometheus
-      chown -R prometheus:prometheus /etc/prometheus /var/lib/prometheus
-      wget -q https://github.com/prometheus/prometheus/releases/download/v$${PROM_VERSION}/prometheus-$${PROM_VERSION}.linux-amd64.tar.gz -O /tmp/prometheus.tar.gz
-      tar xzf /tmp/prometheus.tar.gz -C /tmp/      cp /tmp/prometheus-$${PROM_VERSION}.linux-amd64/prometheus $${PROM_DIR}/
-      cp /tmp/prometheus-$${PROM_VERSION}.linux-amd64/promtool $${PROM_DIR}/
-      chmod +x $${PROM_DIR}/prometheus $${PROM_DIR}/promtool
-      chown prometheus:prometheus $${PROM_DIR}/prometheus $${PROM_DIR}/promtool
+
+      cd /tmp
+
+      wget https://github.com/prometheus/prometheus/releases/download/v2.49.0/prometheus-2.49.0.linux-amd64.tar.gz
+
+      tar xzf prometheus-2.49.0.linux-amd64.tar.gz
+
+      cp prometheus-2.49.0.linux-amd64/prometheus /usr/local/bin/
+      cp prometheus-2.49.0.linux-amd64/promtool /usr/local/bin/
+
+      chmod +x /usr/local/bin/prometheus /usr/local/bin/promtool
+
+      chown prometheus:prometheus /var/lib/prometheus
 
   # Grafana installation script
   - path: /usr/local/bin/install_grafana.sh
@@ -55,6 +65,7 @@ write_files:
     permissions: '0755'
     content: |
       #!/bin/bash
+      docker pull ghcr.io/tomkerkhove/promitor-agent-scraper:2.6.0
       docker rm -f promitor-scraper || true
       docker run -d --name promitor-scraper -p 8080:8080 \
         -v /config/:/config/ \
@@ -491,11 +502,15 @@ runcmd:
 
   - mkdir -p /etc/grafana/dashboards
   - mkdir -p /var/lib/grafana/dashboards
-
+  - useradd --no-create-home --shell /bin/false prometheus || true
+  - mkdir -p /etc/prometheus /var/lib/prometheus
+  - chown -R prometheus:prometheus /etc/prometheus /var/lib/prometheus
   - /usr/local/bin/install_prometheus.sh
-  - systemctl daemon-reload
-  - systemctl enable --now prometheus
+  - systemctl daemon-reexec
 
+  - systemctl daemon-reload
+  - systemctl enable prometheus
+  - systemctl start prometheus
   - /usr/local/bin/install_grafana.sh
   - systemctl enable --now grafana-server
   - chown -R grafana:grafana /var/lib/grafana/dashboards

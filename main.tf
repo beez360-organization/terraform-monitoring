@@ -28,6 +28,15 @@ resource "azurerm_resource_group" "rg" {
   name     = var.resource_group_name
   location = var.location
 }
+module "eventhub" {
+  source = "./modules/eventhub"
+
+  prefix              = var.prefix
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = var.location
+
+  depends_on = [azurerm_resource_group.rg]
+}
 module "network" {
   source = "./modules/network"
 
@@ -66,19 +75,29 @@ module "keyvault" {
 ]
 }
 module "vm_logs_traces" {
-  source               = "./modules/vm_logs_traces"
-  resource_group_name  = azurerm_resource_group.rg.name
-  location             = var.location
-  subnet_id            = module.network.logs_traces_subnet_id
-  vm_name              = "vm-logs-traces"
-  admin_username       = var.admin_username
-  admin_password       = var.admin_password
+  source              = "./modules/vm_logs_traces"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = var.location
+  subnet_id           = module.network.logs_traces_subnet_id
+
+  vm_name        = "vm-logs-traces"
+  admin_username = var.admin_username
+  admin_password = var.admin_password
+
   storage_account_name = module.storage.storage_account_name
   storage_account_key  = module.storage.primary_access_key
-  key_vault_name       = module.keyvault.key_vault_name
-  tags                 = var.tags
+  eventhub_connection_string = module.eventhub.connection_string
+  key_vault_name = module.keyvault.key_vault_name
+  tags           = var.tags
 
-  depends_on = [module.network, module.storage, module.keyvault]
+
+
+  depends_on = [
+    module.network,
+    module.storage,
+    module.keyvault,
+    module.eventhub
+  ]
 }
 
 module "vm_metrics" {
