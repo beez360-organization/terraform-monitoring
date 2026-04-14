@@ -28,7 +28,17 @@ resource "azurerm_resource_group" "rg" {
   name     = var.resource_group_name
   location = var.location
 }
+resource "azurerm_key_vault_access_policy" "vm" {
+  key_vault_id = azurerm_key_vault.this.id
 
+  tenant_id = var.tenant_id
+  object_id = var.vm_principal_id
+
+  secret_permissions = [
+    "Get",
+    "List"
+  ]
+}
 module "network" {
   source = "./modules/network"
 
@@ -73,9 +83,8 @@ module "vm_logs_traces" {
   admin_password       = var.admin_password
   storage_account_name = module.storage.storage_account_name
   storage_account_key  = module.storage.primary_access_key
-  key_vault_name = module.keyvault.key_vault_name
+  key_vault_name       = module.keyvault.key_vault_name
   tags                 = var.tags
-  vm_principal_id = module.vm_logs_traces.principal_id
 
   depends_on = [module.storage]
 }

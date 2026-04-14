@@ -105,3 +105,6 @@ type = string
 default="7df6c09e-5b30-41d7-8bf2-d39b61f07de3"
 
 }
+variable "key_vault_name" {
+  type = string
+}

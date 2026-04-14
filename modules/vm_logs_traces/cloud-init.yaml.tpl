@@ -82,7 +82,7 @@ write_files:
         shared_store: azure
 
   # =========================
-  # Loki ENV (Key Vault injected)
+  # Loki ENV 
   # =========================
   - path: /etc/loki/env
     permissions: "0600"

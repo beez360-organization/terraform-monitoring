@@ -194,7 +194,6 @@ resource "azurerm_linux_virtual_machine" "vm" {
       replace(
         file("${path.module}/cloud-init.yaml.tpl"),
         "__KEY_VAULT_NAME__",
-        var.key_vault_name
       ),
       "__VM_LOGS_IP__",
       azurerm_public_ip.this.ip_address

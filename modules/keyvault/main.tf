@@ -20,14 +20,3 @@ resource "azurerm_key_vault_secret" "storage_key" {
   key_vault_id = azurerm_key_vault.this.id
 }
 
-resource "azurerm_key_vault_access_policy" "vm" {
-  key_vault_id = azurerm_key_vault.this.id
-
-  tenant_id = var.tenant_id
-  object_id = var.vm_principal_id
-
-  secret_permissions = [
-    "Get",
-    "List"
-  ]
-}

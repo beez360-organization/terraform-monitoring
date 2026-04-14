@@ -8,3 +8,7 @@ variable "tags" {
 variable "storage_account_key" {
   sensitive = true
 }
+
+variable "vm_principal_id" {
+  type = string
+}
