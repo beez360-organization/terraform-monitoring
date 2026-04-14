@@ -14,9 +14,4 @@ resource "azurerm_key_vault" "this" {
   tags = var.tags
 }
 
-resource "azurerm_key_vault_secret" "storage_key" {
-  name         = "storage-account-key"
-  value        = var.storage_account_key
-  key_vault_id = azurerm_key_vault.this.id
-}
 

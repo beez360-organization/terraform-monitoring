@@ -121,5 +121,17 @@ resource "azurerm_key_vault_secret" "github_ssh_key" {
   name         = "github-ssh-key"
   value        = tls_private_key.github.private_key_pem
   key_vault_id = module.keyvault.key_vault_id
-  depends_on = [module.keyvault]
+  depends_on = [
+    azurerm_key_vault_access_policy.terraform
+  ]
+}
+
+resource "azurerm_key_vault_secret" "storage_key" {
+  name         = "storage-account-key"
+  value        = module.storage.primary_access_key
+  key_vault_id = module.keyvault.key_vault_id
+
+  depends_on = [
+    azurerm_key_vault_access_policy.terraform
+  ]
 }
