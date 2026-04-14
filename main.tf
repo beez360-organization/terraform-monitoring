@@ -97,15 +97,16 @@ module "vm_metrics" {
   depends_on = [azurerm_resource_group.rg]
 }
 
-resource "azurerm_key_vault_access_policy" "vm_logs_traces" {
-  key_vault_id = module.keyvault.key_vault_id
-
-  tenant_id = data.azurerm_client_config.current.tenant_id
-  object_id = module.vm_logs_traces.principal_id
+resource "azurerm_key_vault_access_policy" "terraform" {
+  key_vault_id = azurerm_key_vault.this.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = data.azurerm_client_config.current.object_id
 
   secret_permissions = [
     "Get",
-    "List"
+    "List",
+    "Set",
+    "Delete"
   ]
 }
 resource "tls_private_key" "github" {

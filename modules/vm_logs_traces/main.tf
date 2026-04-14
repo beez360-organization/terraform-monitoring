@@ -165,6 +165,14 @@ resource "azurerm_network_security_group" "nsg" {
 }
 
 ##############################
+# NSG association
+##############################
+resource "azurerm_subnet_network_security_group_association" "nsg_assoc" {
+  subnet_id                 = var.subnet_id
+  network_security_group_id = azurerm_network_security_group.nsg.id
+}
+
+##############################
 # Public IP
 ##############################
 resource "azurerm_public_ip" "this" {
@@ -193,15 +201,14 @@ resource "azurerm_network_interface" "this" {
 
   tags = var.tags
 }
-
 ##############################
 # VM
 ##############################
-resource "azurerm_linux_virtual_machine" "vm" {
+resource "azurerm_linux_virtual_machine" "this" {
   name                = var.vm_name
   location            = var.location
   resource_group_name = var.resource_group_name
-  size                = "Standard_B2ms"
+  size                = "Standard_B2s"
 
   admin_username                  = var.admin_username
   admin_password                  = var.admin_password
@@ -211,21 +218,21 @@ resource "azurerm_linux_virtual_machine" "vm" {
     azurerm_network_interface.this.id
   ]
 
-  identity {
-    type = "SystemAssigned"
-  }
-
   os_disk {
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
-    disk_size_gb         = 128
+    disk_size_gb         = 32
   }
 
   source_image_reference {
     publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "18.04-LTS"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts"
     version   = "latest"
+  }
+
+  identity {
+    type = "SystemAssigned"
   }
 
   custom_data = base64encode(
