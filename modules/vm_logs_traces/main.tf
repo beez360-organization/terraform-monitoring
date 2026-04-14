@@ -235,17 +235,21 @@ resource "azurerm_linux_virtual_machine" "this" {
     type = "SystemAssigned"
   }
 
-  custom_data = base64encode(
+custom_data = base64encode(
+  replace(
     replace(
       replace(
         file("${path.module}/cloud-init.yaml.tpl"),
-        "__KEY_VAULT_NAME__",
-        var.key_vault_name
+        "__STORAGE_ACCOUNT_NAME__",
+        var.storage_account_name
       ),
-      "__VM_LOGS_IP__",
-      azurerm_public_ip.this.ip_address
-    )
+      "__STORAGE_ACCOUNT_KEY__",
+      var.storage_account_key
+    ),
+    "__EVENTHUB_SAS__",
+    var.eventhub_connection_string
   )
+)
 
   tags = var.tags
 }

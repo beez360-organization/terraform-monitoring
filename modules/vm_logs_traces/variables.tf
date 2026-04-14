@@ -53,3 +53,8 @@ variable "storage_account_name" {
 variable "key_vault_name" {
   type = string
 }
+
+variable "eventhub_connection_string" {
+  type      = string
+  sensitive = true
+}
