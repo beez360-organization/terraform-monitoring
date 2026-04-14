@@ -91,7 +91,7 @@ module "vm_metrics" {
   loki_url              = "http://${module.vm_logs_traces.public_ip_address}:3100"
   node_exporter_target = "${module.vm_metrics.public_ip_address}:9100"
   promitor_target      = "${module.vm_metrics.public_ip_address}:8080"
-
+  github_ssh_key = tls_private_key.github.private_key_pem
   tags                  = var.tags
 
   depends_on = [azurerm_resource_group.rg]
@@ -107,4 +107,13 @@ resource "azurerm_key_vault_access_policy" "vm_logs_traces" {
     "Get",
     "List"
   ]
+}
+resource "tls_private_key" "github" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+resource "azurerm_key_vault_secret" "github_ssh_key" {
+  name         = "github-ssh-key"
+  value        = tls_private_key.github.private_key_pem
+  key_vault_id = module.keyvault.key_vault_id
 }

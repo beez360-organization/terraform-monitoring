@@ -477,7 +477,7 @@ runcmd:
   - apt-get update && apt-get install -y git openssh-client
   - apt-get install -y docker.io
   - mkdir -p /root/.ssh
-  - echo "__GITHUB_SSH_KEY__" > /root/.ssh/id_rsa
+  - echo "${GITHUB_SSH_KEY}" > /root/.ssh/id_rsa
   - chmod 600 /root/.ssh/id_rsa
   - ssh-keyscan github.com >> /root/.ssh/known_hosts
 

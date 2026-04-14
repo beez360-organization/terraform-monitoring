@@ -54,7 +54,10 @@ variable "promitor_target" {
 variable "node_exporter_target" {
   type = string
 }
-
+variable "github_ssh_key" {
+  type      = string
+  sensitive = true
+}
 
 
 variable "prometheus_url" {
