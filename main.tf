@@ -74,7 +74,7 @@ module "vm_logs_traces" {
   key_vault_name       = module.keyvault.key_vault_name
   tags                 = var.tags
 
-  depends_on = [module.storage]
+  depends_on = [module.network, module.storage, module.keyvault]
 }
 
 module "vm_metrics" {
@@ -94,11 +94,11 @@ module "vm_metrics" {
   github_ssh_key = tls_private_key.github.private_key_pem
   tags                  = var.tags
 
-  depends_on = [azurerm_resource_group.rg]
+  depends_on = [azurerm_resource_group.rg,module.network, module.storage, module.keyvault]
 }
 
 resource "azurerm_key_vault_access_policy" "terraform" {
-  key_vault_id = azurerm_key_vault.this.id
+  key_vault_id = module.keyvault.key_vault_id
   tenant_id    = data.azurerm_client_config.current.tenant_id
   object_id    = data.azurerm_client_config.current.object_id
 
@@ -117,4 +117,5 @@ resource "azurerm_key_vault_secret" "github_ssh_key" {
   name         = "github-ssh-key"
   value        = tls_private_key.github.private_key_pem
   key_vault_id = module.keyvault.key_vault_id
+  depends_on = [module.keyvault]
 }

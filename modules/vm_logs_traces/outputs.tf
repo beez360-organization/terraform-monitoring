@@ -1,7 +1,6 @@
 output "vm_id" {
   description = "ID de la VM Logs/Traces"
-  value       = azurerm_linux_virtual_machine.vm.id
-}
+  value       = azurerm_linux_virtual_machine.this.id
 
 
 output "private_ip" {
@@ -12,5 +11,5 @@ output "public_ip_address" {
   value = azurerm_public_ip.this.ip_address
 }
 output "principal_id" {
-  value = azurerm_linux_virtual_machine.vm.identity[0].principal_id
+  value = azurerm_linux_virtual_machine.this.identity[0].principal_id
 }
