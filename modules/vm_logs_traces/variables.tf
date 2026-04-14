@@ -50,3 +50,6 @@ variable "storage_account_name" {
   description = "Name of the storage account"
 }
 
+variable "key_vault_name" {
+  type = string
+}
