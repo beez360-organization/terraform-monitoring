@@ -31,7 +31,7 @@ resource "azurerm_resource_group" "rg" {
 module "network" {
   source = "./modules/network"
 
-  resource_group_name     = var.resource_group_name
+  resource_group_name     = azurerm_resource_group.rg.name
   location                = var.location
   prefix                  = var.prefix
   vnet_cidr               = var.vnet_cidr
@@ -43,7 +43,7 @@ module "network" {
 
 module "storage" {
   source               = "./modules/storage"
-  resource_group_name  = var.resource_group_name
+  resource_group_name  = azurerm_resource_group.rg.name
   location             = var.location
   storage_account_name = var.storage_account_name
   tags                 = var.tags
@@ -55,15 +55,19 @@ module "keyvault" {
 
   prefix              = var.prefix
   location            = var.location
-  resource_group_name = var.resource_group_name
+  resource_group_name = azurerm_resource_group.rg.name
   tenant_id           = data.azurerm_client_config.current.tenant_id
 
   storage_account_key = module.storage.primary_access_key
   tags                = var.tags
+  depends_on = [
+  azurerm_resource_group.rg,
+  module.storage
+]
 }
 module "vm_logs_traces" {
   source               = "./modules/vm_logs_traces"
-  resource_group_name  = var.resource_group_name
+  resource_group_name  = azurerm_resource_group.rg.name
   location             = var.location
   subnet_id            = module.network.logs_traces_subnet_id
   vm_name              = "vm-logs-traces"
@@ -79,7 +83,7 @@ module "vm_logs_traces" {
 
 module "vm_metrics" {
   source                = "./modules/vm_metrics"
-  resource_group_name   = var.resource_group_name
+  resource_group_name   = azurerm_resource_group.rg.name
   location              = var.location
   subnet_id             = module.network.metrics_subnet_id
   vm_name               = "vm-metrics"
