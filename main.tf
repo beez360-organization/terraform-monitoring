@@ -120,24 +120,8 @@ module "vm_metrics" {
   depends_on = [azurerm_resource_group.rg,module.network, module.storage, module.keyvault]
 }
 
-resource "azurerm_role_assignment" "kv_secrets_user" {
-  scope                = module.keyvault.key_vault_id
-  role_definition_name = "Key Vault Secrets Officer"
-  principal_id         = data.azurerm_client_config.current.object_id
-}
+
 resource "tls_private_key" "github" {
   algorithm = "RSA"
   rsa_bits  = 4096
-}
-resource "azurerm_key_vault_secret" "github_ssh_key" {
-  name         = "github-ssh-key"
-  value        = tls_private_key.github.private_key_pem
-  key_vault_id = module.keyvault.key_vault_id
-}
-
-resource "azurerm_key_vault_secret" "storage_key" {
-  name         = "storage-account-key"
-  value        = module.storage.primary_access_key
-  key_vault_id = module.keyvault.key_vault_id
-
 }

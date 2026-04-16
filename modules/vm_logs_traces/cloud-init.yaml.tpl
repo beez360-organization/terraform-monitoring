@@ -226,17 +226,11 @@ runcmd:
   - systemctl start loki || true
 
   # Fluent-bit install
-  - mkdir -p /usr/share/keyrings
   - curl -fsSL https://packages.fluentbit.io/fluentbit.key | gpg --dearmor -o /usr/share/keyrings/fluentbit.gpg
-  - echo "deb [signed-by=/usr/share/keyrings/fluentbit.gpg] https://packages.fluentbit.io/ubuntu/jammy jammy main" | tee /etc/apt/sources.list.d/fluent-bit.list
+  - echo "deb [signed-by=/usr/share/keyrings/fluentbit.gpg] https://packages.fluentbit.io/ubuntu/jammy jammy main" > /etc/apt/sources.list.d/fluent-bit.list
 
-  -  apt-get update
-  -  apt-get install -y fluent-bit
-  - mkdir -p /etc/systemd/system/fluent-bit.service.d
-  - echo "[Service]" > /etc/systemd/system/fluent-bit.service.d/override.conf
-  - echo "ExecStart=" >> /etc/systemd/system/fluent-bit.service.d/override.conf
-  - echo "/opt/fluent-bit/bin/fluent-bit -c /etc/fluent-bit/fluent-bit.conf" >> /etc/systemd/system/fluent-bit.service.d/override.conf
-
+  - apt-get update
+  - DEBIAN_FRONTEND=noninteractive apt-get install -y fluent-bit
   - systemctl daemon-reload
   - systemctl enable fluent-bit
   - systemctl restart fluent-bit || true
