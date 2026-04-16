@@ -143,7 +143,7 @@ write_files:
   - path: /etc/fluent-bit/split.lua
     permissions: "0644"
     content: |
-      local cjson = require "cjson"
+      local cjson = require "cjson.safe"
 
       function split_records(tag, timestamp, record)
           local new_records = {}
@@ -226,23 +226,34 @@ runcmd:
   - systemctl enable loki
   - systemctl start loki || true
 
-  # Fluent-bit install
- # =========================
-  # Fluent Bit install (FIXED)
-  # =========================
-  - curl -fsSL https://packages.fluentbit.io/fluentbit.key | gpg --dearmor -o /usr/share/keyrings/fluentbit.gpg
-
-  - echo "deb [signed-by=/usr/share/keyrings/fluentbit.gpg] https://packages.fluentbit.io/ubuntu/jammy jammy main" > /etc/apt/sources.list.d/fluent-bit.list
-
+# =========================
+# Fluent Bit install (ROBUST)
+# =========================
   - apt-get update
   - DEBIAN_FRONTEND=noninteractive apt-get install -y fluent-bit
 
-  # 🔥 Corriger le service systemd (TRÈS IMPORTANT)
-  - sed -i 's|ExecStart=.*|ExecStart=/opt/fluent-bit/bin/fluent-bit -c /etc/fluent-bit/fluent-bit.conf|' /lib/systemd/system/fluent-bit.service
+# ensure config folder exists
+  - mkdir -p /etc/fluent-bit
 
-  # 🔥 Reload + enable + start
+# force correct service override (SAFE WAY)
+  - mkdir -p /etc/systemd/system/fluent-bit.service.d
+  - |
+    cat <<EOF > /etc/systemd/system/fluent-bit.service.d/override.conf
+    [Service]
+    ExecStart=
+    ExecStart=/opt/fluent-bit/bin/fluent-bit -c /etc/fluent-bit/fluent-bit.conf
+    Restart=always
+    EOF
+  - sleep 20
+  - systemctl start fluent-bit
+
+# reload systemd clean
+  - systemctl daemon-reexec
   - systemctl daemon-reload
-  - systemctl enable fluent-bit
+  - apt-get update
+  - DEBIAN_FRONTEND=noninteractive apt-get install -y kafkacat
+# IMPORTANT: delay start (cloud-init safe)
+  - systemctl enable fluent-bit  
   - systemctl restart fluent-bit
   # sys tuning
   - echo "vm.swappiness=10" >> /etc/sysctl.conf

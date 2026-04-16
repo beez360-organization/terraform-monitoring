@@ -18,7 +18,7 @@ write_files:
   - path: /etc/grafana/env
     permissions: '0600'
     content: |
-      GRAFANA_URL=__GRAFANA_URL__
+      GRAFANA_URL=${GRAFANA_URL}
       ADMIN_PASSWORD=admin
 
   # Prometheus installation script
@@ -149,10 +149,10 @@ write_files:
       scrape_configs:
         - job_name: 'node_exporter'
           static_configs:
-            - targets: ['__PROM_NODE_EXPORTER__']
+            - targets: ['${PROM_NODE_EXPORTER}']
         - job_name: 'promitor'
           static_configs:
-            - targets: ['__PROM_PROMITOR__']
+            - targets: ['${PROM_PROMITOR}']
 
 
   - path: /etc/grafana/provisioning/datasources/default.yaml
@@ -163,13 +163,13 @@ write_files:
       - name: Prometheus
         type: prometheus
         access: proxy
-        url: __PROM_URL__
+        url: ${PROM_URL}
         isDefault: true
 
       - name: Loki
         type: loki
         access: proxy
-        url: __LOKI_URL__
+        url: ${LOKI_URL}
 
 
   # Promitor metrics declaration (Azure)
@@ -529,13 +529,13 @@ runcmd:
   - systemctl restart grafana-server || true
 
   - |
-      until curl -s __GRAFANA_URL__/api/health | jq -e '.database=="ok"' > /dev/null; do
+      until curl -s ${GRAFANA_URL}/api/health | jq -e '.database=="ok"' > /dev/null; do
         echo "Waiting for Grafana..."
         sleep 5
       done
 
   - |
-      api_key=$(curl -s -X POST __GRAFANA_URL__/api/auth/keys \
+      api_key=$(curl -s -X POST ${GRAFANA_URL}/api/auth/keys \
         -u admin:admin \
         -H "Content-Type: application/json" \
         -d '{"name":"terraform-import","role":"Admin","secondsToLive":86400}' | jq -r '.key')
@@ -546,13 +546,13 @@ runcmd:
   - |
       api_key=$(cat /etc/grafana/api_key)
 
-      curl -s -X POST __GRAFANA_URL__/api/datasources \
+      curl -s -X POST ${GRAFANA_URL}/api/datasources \
         -H "Content-Type: application/json" \
         -H "Authorization: Bearer $api_key" \
         -d '{
           "name":"Prometheus",
           "type":"prometheus",
-          "url":"http://__PROM_URL__:9090",
+          "url":"http://${PROM_URL}:9090",
           "access":"proxy",
           "basicAuth":false
         }'
@@ -560,13 +560,13 @@ runcmd:
   - |
       api_key=$(cat /etc/grafana/api_key)
 
-      curl -s -X POST __GRAFANA_URL__/api/datasources \
+      curl -s -X POST ${GRAFANA_URL}/api/datasources \
         -H "Content-Type: application/json" \
         -H "Authorization: Bearer $api_key" \
         -d '{
           "name":"Loki",
           "type":"loki",
-          "url":"__LOKI_URL__",
+          "url":"${LOKI_URL}",
           "access":"proxy",
           "basicAuth":false
         }'
