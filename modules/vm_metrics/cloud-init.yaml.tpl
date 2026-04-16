@@ -484,21 +484,6 @@ write_files:
             transformation: None
 
 runcmd:
-  - apt-get update && apt-get install -y git openssh-client
-
-  - mkdir -p /root/.ssh
-  - chmod 700 /root/.ssh
-
-  - printf "%s" "${GITHUB_SSH_KEY}" > /root/.ssh/id_rsa
-  - chmod 600 /root/.ssh/id_rsa
-
-  - ssh-keyscan github.com > /root/.ssh/known_hosts
-  - chmod 600 /root/.ssh/known_hosts
-
-  - eval "$(ssh-agent -s)"
-  - ssh-add /root/.ssh/id_rsa
-
-  - git clone git@github.com:beez360-organization/terraform-monitoring.git /opt/terraform-monitoring 
   - mkdir -p /var/lib/grafana/dashboards
   - cp /opt/terraform-monitoring/dashboards/*.json /var/lib/grafana/dashboards/ || true
 
@@ -540,7 +525,6 @@ runcmd:
   - chown -R grafana:grafana /var/lib/grafana/dashboards
 
   - systemctl enable --now promitor.service || true
-  - apt-get install -y grafana
   - systemctl daemon-reload
   - systemctl restart grafana-server || true
 

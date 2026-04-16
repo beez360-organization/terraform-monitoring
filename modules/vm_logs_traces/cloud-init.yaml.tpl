@@ -16,7 +16,8 @@ packages:
   - software-properties-common
   - gnupg
   - kafkacat
-
+bootcmd:
+  - mkdir -p /etc/fluent-bit
 write_files:
 
 
@@ -226,15 +227,23 @@ runcmd:
   - systemctl start loki || true
 
   # Fluent-bit install
+ # =========================
+  # Fluent Bit install (FIXED)
+  # =========================
   - curl -fsSL https://packages.fluentbit.io/fluentbit.key | gpg --dearmor -o /usr/share/keyrings/fluentbit.gpg
+
   - echo "deb [signed-by=/usr/share/keyrings/fluentbit.gpg] https://packages.fluentbit.io/ubuntu/jammy jammy main" > /etc/apt/sources.list.d/fluent-bit.list
 
   - apt-get update
   - DEBIAN_FRONTEND=noninteractive apt-get install -y fluent-bit
+
+  # 🔥 Corriger le service systemd (TRÈS IMPORTANT)
+  - sed -i 's|ExecStart=.*|ExecStart=/opt/fluent-bit/bin/fluent-bit -c /etc/fluent-bit/fluent-bit.conf|' /lib/systemd/system/fluent-bit.service
+
+  # 🔥 Reload + enable + start
   - systemctl daemon-reload
   - systemctl enable fluent-bit
-  - systemctl restart fluent-bit || true
-
+  - systemctl restart fluent-bit
   # sys tuning
   - echo "vm.swappiness=10" >> /etc/sysctl.conf
   - echo "vm.max_map_count=262144" >> /etc/sysctl.conf

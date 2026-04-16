@@ -214,7 +214,6 @@ locals {
     LOKI_URL           = var.loki_url
     PROM_NODE_EXPORTER = var.node_exporter_target
     PROM_PROMITOR      = var.promitor_target
-    GITHUB_SSH_KEY     = var.github_ssh_key
   })
 }
 
