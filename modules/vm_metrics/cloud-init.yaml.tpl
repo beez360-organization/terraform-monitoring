@@ -485,17 +485,20 @@ write_files:
 
 runcmd:
   - apt-get update && apt-get install -y git openssh-client
-  - apt-get install -y docker.io
-  - |
-    mkdir -p /root/.ssh
-    cat <<EOF > /root/.ssh/id_rsa
-    ${GITHUB_SSH_KEY}
-    EOF
-    chmod 600 /root/.ssh/id_rsa
-    ssh-keyscan github.com >> /root/.ssh/known_hosts
-  - git clone git@github.com:beez360-organization/terraform-monitoring.git /opt/terraform-monitoring
 
-  - mkdir -p /var/lib/grafana/dashboards
+  - mkdir -p /root/.ssh
+  - chmod 700 /root/.ssh
+
+  - printf "%s" "${GITHUB_SSH_KEY}" > /root/.ssh/id_rsa
+  - chmod 600 /root/.ssh/id_rsa
+
+  - ssh-keyscan github.com > /root/.ssh/known_hosts
+  - chmod 600 /root/.ssh/known_hosts
+
+  - eval "$(ssh-agent -s)"
+  - ssh-add /root/.ssh/id_rsa
+
+  - git clone git@github.com:beez360-organization/terraform-monitoring.git /opt/terraform-monitoring  - mkdir -p /var/lib/grafana/dashboards
   - cp /opt/terraform-monitoring/dashboards/*.json /var/lib/grafana/dashboards/ || true
 
   - systemctl enable --now docker
@@ -508,16 +511,16 @@ runcmd:
   - /usr/local/bin/install_prometheus.sh
   - systemctl daemon-reexec
 
-  - systemctl daemon-reload
-  - systemctl enable prometheus
-  - systemctl start prometheus
+  - systemctl daemon-reload 
+  - systemctl enable prometheus || true
+  - systemctl start prometheus || true
   - /usr/local/bin/install_grafana.sh
   - systemctl enable --now grafana-server
   - chown -R grafana:grafana /var/lib/grafana/dashboards
 
-  - systemctl enable --now promitor.service
+  - systemctl enable --now promitor.service || true
 
-  - systemctl restart grafana-server
+  - systemctl restart grafana-server || true
 
   - |
       until curl -s __GRAFANA_URL__/api/health | jq -e '.database=="ok"' > /dev/null; do
@@ -532,7 +535,7 @@ runcmd:
         -d '{"name":"terraform-import","role":"Admin","secondsToLive":86400}' | jq -r '.key')
       echo $api_key > /etc/grafana/api_key
 
-  - systemctl enable --now grafana-import.service
+  - systemctl enable --now grafana-import.service || true
 
   - |
       api_key=$(cat /etc/grafana/api_key)

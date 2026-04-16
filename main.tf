@@ -120,17 +120,10 @@ module "vm_metrics" {
   depends_on = [azurerm_resource_group.rg,module.network, module.storage, module.keyvault]
 }
 
-resource "azurerm_key_vault_access_policy" "terraform" {
-  key_vault_id = module.keyvault.key_vault_id
-  tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = data.azurerm_client_config.current.object_id
-
-  secret_permissions = [
-    "Get",
-    "List",
-    "Set",
-    "Delete"
-  ]
+resource "azurerm_role_assignment" "kv_secrets_user" {
+  scope                = module.keyvault.key_vault_id
+  role_definition_name = "Key Vault Secrets Officer"
+  principal_id         = data.azurerm_client_config.current.object_id
 }
 resource "tls_private_key" "github" {
   algorithm = "RSA"
@@ -140,9 +133,6 @@ resource "azurerm_key_vault_secret" "github_ssh_key" {
   name         = "github-ssh-key"
   value        = tls_private_key.github.private_key_pem
   key_vault_id = module.keyvault.key_vault_id
-  depends_on = [
-    azurerm_key_vault_access_policy.terraform
-  ]
 }
 
 resource "azurerm_key_vault_secret" "storage_key" {
@@ -150,7 +140,4 @@ resource "azurerm_key_vault_secret" "storage_key" {
   value        = module.storage.primary_access_key
   key_vault_id = module.keyvault.key_vault_id
 
-  depends_on = [
-    azurerm_key_vault_access_policy.terraform
-  ]
 }

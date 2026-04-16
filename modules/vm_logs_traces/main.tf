@@ -182,6 +182,8 @@ resource "azurerm_public_ip" "this" {
   allocation_method   = "Static"
   sku                 = "Standard"
   tags                = var.tags
+  domain_name_label = "${var.vm_name}-loki"
+
 }
 
 ##############################
@@ -239,16 +241,16 @@ custom_data = base64encode(
   replace(
     replace(
       replace(
-        file("${path.module}/cloud-init.yaml.tpl"),
-        "__STORAGE_ACCOUNT_NAME__",
-        var.storage_account_name
+        replace(
+          file("${path.module}/cloud-init.yaml.tpl"),
+          "__STORAGE_ACCOUNT_NAME__", var.storage_account_name
+        ),
+        "__STORAGE_ACCOUNT_KEY__", var.storage_account_key
       ),
-      "__STORAGE_ACCOUNT_KEY__",
-      var.storage_account_key
+      "__EVENTHUB_SAS__", var.eventhub_connection_string
     ),
-    "__EVENTHUB_SAS__",
-    var.eventhub_connection_string
-  )
+      "__VM_LOGS_IP__",
+      azurerm_public_ip.this.ip_address  )
 )
 
   tags = var.tags

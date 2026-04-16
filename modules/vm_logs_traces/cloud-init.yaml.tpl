@@ -15,23 +15,10 @@ packages:
   - jq
   - software-properties-common
   - gnupg
+  - kafkacat
 
 write_files:
 
-  # =========================
-  # KafkaCat installer
-  # =========================
-  - path: /usr/local/bin/install_kafkacat.sh
-    permissions: '0755'
-    content: |
-      #!/bin/bash
-      set -e
-      KAFKACAT_VERSION="1.3.1"
-
-      wget -q https://github.com/edenhill/kafkacat/releases/download/${KAFKACAT_VERSION}/kafkacat-${KAFKACAT_VERSION}.tar.gz -O /tmp/kafkacat.tar.gz
-      tar xzf /tmp/kafkacat.tar.gz -C /tmp/
-      cp /tmp/kafkacat-${KAFKACAT_VERSION}/kafkacat /usr/local/bin/kafkacat
-      chmod +x /usr/local/bin/kafkacat
 
   # =========================
   # Loki config
@@ -111,7 +98,7 @@ write_files:
   # =========================
   # Fluent Bit config (FULL)
   # =========================
-  - path: /etc/td-agent-bit/td-agent-bit.conf
+  - path: /etc/fluent-bit/fluent-bit.conf
     permissions: "0644"
     content: |
       [SERVICE]
@@ -131,20 +118,20 @@ write_files:
           rdkafka.security.protocol SASL_SSL
           rdkafka.sasl.mechanisms PLAIN
           rdkafka.sasl.username $ConnectionString
-          rdkafka.sasl.password ${eventhub_sas}
+          rdkafka.sasl.password __EVENTHUB_SAS__
           rdkafka.enable.ssl.certificate.verification false
           rdkafka.auto.offset.reset earliest
 
       [FILTER]
           Name lua
           Match eventhub.logs
-          script /etc/td-agent-bit/split.lua
+          script /etc/fluent-bit/split.lua
           call split_records
 
       [OUTPUT]
           Name loki
           Match *
-          Host ${loki_host}
+          Host __VM_LOGS_IP__
           Port 3100
           Labels job=eventhub
           Line_Format json
@@ -152,7 +139,7 @@ write_files:
   # =========================
   # Lua parser FULL (ton original logique gardée)
   # =========================
-  - path: /etc/td-agent-bit/split.lua
+  - path: /etc/fluent-bit/split.lua
     permissions: "0644"
     content: |
       local cjson = require "cjson"
@@ -220,15 +207,13 @@ write_files:
       end
 
 runcmd:
-  - set -e
 
   # kafkacat
-  - /usr/local/bin/install_kafkacat.sh
 
   # Loki install
   - wget -O /tmp/loki.zip https://github.com/grafana/loki/releases/download/v2.9.1/loki-linux-amd64.zip
   - unzip -o /tmp/loki.zip -d /tmp
-  - install -m 755 /tmp/loki-linux-amd64 /usr/local/bin/loki 
+  - mv /tmp/loki-linux-amd64 /usr/local/bin/loki
   - chmod +x /usr/local/bin/loki
 
   # dirs
@@ -238,25 +223,25 @@ runcmd:
   # systemd
   - systemctl daemon-reload
   - systemctl enable loki
-  - systemctl start loki
+  - systemctl start loki || true
 
   # Fluent-bit install
+  - mkdir -p /usr/share/keyrings
   - curl -fsSL https://packages.fluentbit.io/fluentbit.key | gpg --dearmor -o /usr/share/keyrings/fluentbit.gpg
-
   - echo "deb [signed-by=/usr/share/keyrings/fluentbit.gpg] https://packages.fluentbit.io/ubuntu/jammy jammy main" | tee /etc/apt/sources.list.d/fluent-bit.list
 
-  - apt-get update
-  - apt-get install -y fluent-bit
+  -  apt-get update
+  -  apt-get install -y fluent-bit
   - mkdir -p /etc/systemd/system/fluent-bit.service.d
   - echo "[Service]" > /etc/systemd/system/fluent-bit.service.d/override.conf
   - echo "ExecStart=" >> /etc/systemd/system/fluent-bit.service.d/override.conf
-  - echo "ExecStart=/opt/fluent-bit/bin/fluent-bit -c /etc/td-agent-bit/td-agent-bit.conf" >> /etc/systemd/system/fluent-bit.service.d/override.conf
+  - echo "/opt/fluent-bit/bin/fluent-bit -c /etc/fluent-bit/fluent-bit.conf" >> /etc/systemd/system/fluent-bit.service.d/override.conf
 
   - systemctl daemon-reload
   - systemctl enable fluent-bit
-  - systemctl restart fluent-bit
+  - systemctl restart fluent-bit || true
 
   # sys tuning
   - echo "vm.swappiness=10" >> /etc/sysctl.conf
   - echo "vm.max_map_count=262144" >> /etc/sysctl.conf
-  - sysctl -p
+  - sysctl -p || true
