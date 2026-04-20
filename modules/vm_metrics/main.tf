@@ -47,6 +47,8 @@ resource "azurerm_network_security_group" "nsg" {
     destination_address_prefix = "*"
   }
 
+  
+
   # Grafana
   security_rule {
     name                       = "AllowGrafana"
@@ -60,7 +62,7 @@ resource "azurerm_network_security_group" "nsg" {
     destination_address_prefix = "*"
   }
 
-  # Promitor
+ # Promitor
   security_rule {
     name                       = "AllowPromitor"
     priority                   = 130
