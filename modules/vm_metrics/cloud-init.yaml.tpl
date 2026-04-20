@@ -71,27 +71,7 @@ write_files:
         -v /config/:/config/ \
         ghcr.io/tomkerkhove/promitor-agent-scraper:2.6.0
 
-  # Dashboards import script
-  - path: /usr/local/bin/import_dashboards.sh
-    permissions: '0755'
-    content: |
-      #!/bin/bash
-      set -e
-      source /etc/grafana/env
-      DASHBOARDS_DIR="/var/lib/grafana/dashboards"
-      api_key=$(cat /etc/grafana/api_key)
-      until curl -s $GRAFANA_URL/api/health | jq -e '.database=="ok"' > /dev/null; do
-        echo "Waiting for Grafana to be ready..."
-        sleep 5
-      done
-      for dashboard_file in "$DASHBOARDS_DIR"/*.json; do
-        echo "Importing dashboard $dashboard_file ..."
-        DASH_JSON=$(jq -c '.' "$dashboard_file")
-        curl -s -X POST "$GRAFANA_URL/api/dashboards/db" \
-          -H "Content-Type: application/json" \
-          -H "Authorization: Bearer $api_key" \
-          -d "{\"dashboard\":$DASH_JSON,\"overwrite\":true}"
-      done
+
 
   # Promitor systemd
   - path: /etc/systemd/system/promitor.service
@@ -126,20 +106,6 @@ write_files:
       [Install]
       WantedBy=multi-user.target
 
-  # Grafana dashboards import systemd
-  - path: /etc/systemd/system/grafana-import.service
-    permissions: '0644'
-    content: |
-      [Unit]
-      Description=Import Grafana Dashboards
-      After=grafana-server.service
-      Wants=grafana-server.service
-      [Service]
-      Type=oneshot
-      ExecStart=/usr/local/bin/import_dashboards.sh
-      RemainAfterExit=yes
-      [Install]
-      WantedBy=multi-user.target
 
   # Prometheus config
   - path: /etc/prometheus/prometheus.yml
@@ -483,9 +449,31 @@ write_files:
           labels:
             transformation: None
 
+  - path: /etc/nginx/conf.d/99-hardening.conf
+    permissions: '0644'
+    content: |
+      server_names_hash_bucket_size 128;
+      server_names_hash_max_size 512;
+  
+  - path: /etc/nginx/sites-available/grafana
+    permissions: '0644'
+    content: |
+      server {
+          listen 80;
+          server_name beez360-dashboard.francecentral.cloudapp.azure.com;
+
+          location / {
+              proxy_pass http://127.0.0.1:3000;
+
+              proxy_set_header Host $host;
+              proxy_set_header X-Real-IP $remote_addr;
+              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header X-Forwarded-Proto $scheme;
+          }
+      }
+
 runcmd:
   - mkdir -p /var/lib/grafana/dashboards
-  - cp /opt/terraform-monitoring/dashboards/*.json /var/lib/grafana/dashboards/ || true
 
   - systemctl enable --now docker
 
@@ -570,3 +558,15 @@ runcmd:
           "access":"proxy",
           "basicAuth":false
         }'
+  # =========================
+  # NGINX setup
+  # =========================
+  - apt-get update
+  - DEBIAN_FRONTEND=noninteractive apt-get install -y nginx
+  - rm -f /etc/nginx/sites-enabled/default || true
+
+  - ln -sf /etc/nginx/sites-available/grafana /etc/nginx/sites-enabled/grafana
+
+  - nginx -t
+  - systemctl enable nginx
+  - systemctl restart nginx || true

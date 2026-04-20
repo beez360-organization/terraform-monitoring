@@ -112,9 +112,9 @@ write_files:
       [INPUT]
           Name kafka
           Tag eventhub.logs
-          Brokers evh-beez360-monitoring-dev.servicebus.windows.net:9093
+          Brokers beez360-ehns.servicebus.windows.net:9093
           Topics logs-appservice
-          Group_Id fluentbit-eventhub
+          Group_Id Default
           Format json
           rdkafka.security.protocol SASL_SSL
           rdkafka.sasl.mechanisms PLAIN
@@ -245,7 +245,6 @@ runcmd:
   - |
     cat <<EOF > /etc/systemd/system/fluent-bit.service.d/override.conf
     [Service]
-    ExecStart=
     ExecStart=/opt/fluent-bit/bin/fluent-bit -c /etc/fluent-bit/fluent-bit.conf
     Restart=always
     EOF

@@ -15,13 +15,13 @@ resource "azurerm_eventhub" "logs" {
   message_retention = 1
 }
 
-resource "azurerm_eventhub_authorization_rule" "fluentbit" {
-  name                = "fluentbit-rule"
-  namespace_name      = azurerm_eventhub_namespace.this.name
-  eventhub_name      = azurerm_eventhub.logs.name
+
+resource "azurerm_eventhub_namespace_authorization_rule" "sap" {
+  name                = "RootManageSharedAccessKey"
   resource_group_name = var.resource_group_name
+  namespace_name      = azurerm_eventhub_namespace.this.name
 
   listen = true
   send   = true
-  manage = false
+  manage = true
 }
