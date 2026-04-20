@@ -229,8 +229,13 @@ runcmd:
 # =========================
 # Fluent Bit install (ROBUST)
 # =========================
+  - curl https://packages.fluentbit.io/fluentbit.key | gpg --dearmor -o /usr/share/keyrings/fluentbit-keyring.gpg
+
+  - echo "deb [signed-by=/usr/share/keyrings/fluentbit-keyring.gpg] https://packages.fluentbit.io/ubuntu/$(lsb_release -cs) $(lsb_release -cs) main" > /etc/apt/sources.list.d/fluent-bit.list
+
   - apt-get update
-  - DEBIAN_FRONTEND=noninteractive apt-get install -y fluent-bit
+  - apt-get install -y fluent-bit
+  - apt-get update
 
 # ensure config folder exists
   - mkdir -p /etc/fluent-bit
@@ -245,7 +250,6 @@ runcmd:
     Restart=always
     EOF
   - sleep 20
-  - systemctl start fluent-bit
 
 # reload systemd clean
   - systemctl daemon-reexec
