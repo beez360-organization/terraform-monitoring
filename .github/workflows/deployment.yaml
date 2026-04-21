@@ -13,10 +13,17 @@ jobs:
   terraform:
     runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v4
+    env:
+      ARM_USE_OIDC: true
+      ARM_CLIENT_ID: ${{ secrets.CLIENT_ID_MONITOR }}
+      ARM_TENANT_ID: ${{ secrets.TENANT_ID_MONITOR }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID_MONITOR }}
 
-  
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+
       - name: Azure Login
         uses: azure/login@v1
         with:
@@ -24,17 +31,23 @@ jobs:
           tenant-id: ${{ secrets.TENANT_ID_MONITOR }}
           subscription-id: ${{ secrets.SUBSCRIPTION_ID_MONITOR }}
 
-  
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.6
 
+    
       - name: Terraform Init
         run: terraform init -upgrade
+
+
+      - name: Terraform Format
+        run: terraform fmt -check -recursive
 
       - name: Terraform Validate
         run: terraform validate
 
+  
       - name: Terraform Plan
         run: terraform plan -input=false
