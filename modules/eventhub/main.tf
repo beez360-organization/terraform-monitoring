@@ -14,5 +14,9 @@ resource "azurerm_eventhub" "logs" {
   partition_count   = 2
   message_retention = 1
 }
-
+data "azurerm_eventhub_namespace_authorization_rule" "default" {
+  name                = "RootManageSharedAccessKey"
+  namespace_name      = azurerm_eventhub_namespace.this.name
+  resource_group_name = var.resource_group_name
+}
 
