@@ -16,12 +16,3 @@ resource "azurerm_eventhub" "logs" {
 }
 
 
-resource "azurerm_eventhub_namespace_authorization_rule" "sap" {
-  name                = "RootManageSharedAccessKey"
-  resource_group_name = var.resource_group_name
-  namespace_name      = azurerm_eventhub_namespace.this.name
-
-  listen = true
-  send   = true
-  manage = true
-}
