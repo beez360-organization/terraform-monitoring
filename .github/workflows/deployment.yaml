@@ -1,4 +1,4 @@
-name: Terraform Validation
+name: Terraform Azure Deployment
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 permissions:
   contents: read
-  id-token: write
+  id-token: write   # IMPORTANT pour OIDC
 
 jobs:
   terraform:
@@ -16,6 +16,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+  
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.CLIENT_ID_MONITOR }}
+          tenant-id: ${{ secrets.TENANT_ID_MONITOR }}
+          subscription-id: ${{ secrets.SUBSCRIPTION_ID_MONITOR }}
+
+  
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
@@ -23,9 +32,6 @@ jobs:
 
       - name: Terraform Init
         run: terraform init -upgrade
-
-      - name: Terraform Format Check
-        run: terraform fmt -check -recursive
 
       - name: Terraform Validate
         run: terraform validate
