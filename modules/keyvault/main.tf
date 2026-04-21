@@ -10,7 +10,7 @@ resource "azurerm_key_vault" "this" {
 
   soft_delete_retention_days = 7
   purge_protection_enabled   = false
-  tags = var.tags
+  tags                       = var.tags
 }
 data "azurerm_client_config" "current" {}
 

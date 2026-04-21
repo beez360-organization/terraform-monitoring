@@ -41,7 +41,7 @@ variable "data_disk_size_gb" {
 variable "prometheus_target_ip" {
   description = "IP address of the Prometheus target "
   type        = string
-} 
+}
 variable "grafana_url" {
   type        = string
   description = "URL de Grafana"

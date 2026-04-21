@@ -20,7 +20,7 @@ terraform {
 data "azurerm_client_config" "current" {}
 provider "azurerm" {
   features {}
-    use_oidc = true
+  use_oidc = true
 
 }
 
@@ -70,9 +70,9 @@ module "keyvault" {
   storage_account_key = module.storage.primary_access_key
   tags                = var.tags
   depends_on = [
-  azurerm_resource_group.rg,
-  module.storage
-]
+    azurerm_resource_group.rg,
+    module.storage
+  ]
 }
 module "vm_logs_traces" {
   source              = "./modules/vm_logs_traces"
@@ -84,11 +84,11 @@ module "vm_logs_traces" {
   admin_username = var.admin_username
   admin_password = var.admin_password
 
-  storage_account_name = module.storage.storage_account_name
-  storage_account_key  = module.storage.primary_access_key
+  storage_account_name       = module.storage.storage_account_name
+  storage_account_key        = module.storage.primary_access_key
   eventhub_connection_string = module.eventhub.connection_string
-  key_vault_name = module.keyvault.key_vault_name
-  tags           = var.tags
+  key_vault_name             = module.keyvault.key_vault_name
+  tags                       = var.tags
 
 
 
@@ -101,22 +101,22 @@ module "vm_logs_traces" {
 }
 
 module "vm_metrics" {
-  source                = "./modules/vm_metrics"
-  resource_group_name   = azurerm_resource_group.rg.name
-  location              = var.location
-  subnet_id             = module.network.metrics_subnet_id
-  vm_name               = "vm-metrics"
-  admin_username        = var.admin_username
-  admin_password        = var.admin_password
-  prometheus_target_ip  = module.vm_logs_traces.public_ip_address
-  grafana_url           = "http://${module.vm_metrics.public_ip_address}:3000"
-  prometheus_url        = "http://${module.vm_metrics.public_ip_address}:9090"
-  loki_url              = "http://${module.vm_logs_traces.public_ip_address}:3100"
+  source               = "./modules/vm_metrics"
+  resource_group_name  = azurerm_resource_group.rg.name
+  location             = var.location
+  subnet_id            = module.network.metrics_subnet_id
+  vm_name              = "vm-metrics"
+  admin_username       = var.admin_username
+  admin_password       = var.admin_password
+  prometheus_target_ip = module.vm_logs_traces.public_ip_address
+  grafana_url          = "http://${module.vm_metrics.public_ip_address}:3000"
+  prometheus_url       = "http://${module.vm_metrics.public_ip_address}:9090"
+  loki_url             = "http://${module.vm_logs_traces.public_ip_address}:3100"
   node_exporter_target = "${module.vm_metrics.public_ip_address}:9100"
   promitor_target      = "${module.vm_metrics.public_ip_address}:8080"
-  tags                  = var.tags
+  tags                 = var.tags
 
-  depends_on = [azurerm_resource_group.rg,module.network, module.storage, module.keyvault]
+  depends_on = [azurerm_resource_group.rg, module.network, module.storage, module.keyvault]
 }
 
 

@@ -7,9 +7,9 @@ data "azurerm_resource_group" "this" {
 # Storage Account
 ##############################
 resource "azurerm_storage_account" "this" {
-  name                     = var.storage_account_name
-  resource_group_name      = var.resource_group_name
-  location                 = var.location
+  name                = var.storage_account_name
+  resource_group_name = var.resource_group_name
+  location            = var.location
 
   account_tier             = "Standard"
   account_replication_type = "LRS"
@@ -24,7 +24,7 @@ resource "azurerm_storage_account" "this" {
   }
 
   tags = var.tags
-    depends_on = [
+  depends_on = [
     data.azurerm_resource_group.this
   ]
 }

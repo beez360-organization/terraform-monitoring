@@ -1,7 +1,7 @@
 variable "resource_group_name" {
   description = "Nom du groupe de ressources"
   type        = string
-  default = "rg-monitoring"
+  default     = "rg-monitoring"
 }
 
 variable "location" {
@@ -12,7 +12,7 @@ variable "location" {
 
 variable "regions" {
   description = "Liste des régions Azure"
-  type = map(string)
+  type        = map(string)
   default = {
     france_centrale = "France Central"
     europe_west     = "West Europe"
@@ -93,16 +93,16 @@ variable "image_sku" {
   default     = "20.04-LTS"
 }
 
-variable "logs_traces_ip"{
+variable "logs_traces_ip" {
 
-default=""
-  
+  default = ""
+
 }
-variable "subscription_id"{
+variable "subscription_id" {
 
-description="subscriptionn id "
-type = string
-default="7df6c09e-5b30-41d7-8bf2-d39b61f07de3"
+  description = "subscriptionn id "
+  type        = string
+  default     = "7df6c09e-5b30-41d7-8bf2-d39b61f07de3"
 
 }
 variable "key_vault_name" {

@@ -16,9 +16,9 @@ resource "azurerm_network_security_group" "nsg" {
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
-    source_port_range         = "*"
-    destination_port_range    = "9090"
-    source_address_prefix     = "*"
+    source_port_range          = "*"
+    destination_port_range     = "9090"
+    source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
 
@@ -29,25 +29,25 @@ resource "azurerm_network_security_group" "nsg" {
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
-    source_port_range         = "*"
-    destination_port_range    = "9100"
-    source_address_prefix     = "*"
+    source_port_range          = "*"
+    destination_port_range     = "9100"
+    source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
-    # NGINX
+  # NGINX
   security_rule {
     name                       = "AllowNGINX"
     priority                   = 115
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
-    source_port_range         = "*"
-    destination_port_range    = "80"
-    source_address_prefix     = "*"
+    source_port_range          = "*"
+    destination_port_range     = "80"
+    source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
 
-  
+
 
   # Grafana
   security_rule {
@@ -56,22 +56,22 @@ resource "azurerm_network_security_group" "nsg" {
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
-    source_port_range         = "*"
-    destination_port_range    = "3000"
-    source_address_prefix     = "*"
+    source_port_range          = "*"
+    destination_port_range     = "3000"
+    source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
 
- # Promitor
+  # Promitor
   security_rule {
     name                       = "AllowPromitor"
     priority                   = 130
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
-    source_port_range         = "*"
-    destination_port_range    = "8080"
-    source_address_prefix     = "*"
+    source_port_range          = "*"
+    destination_port_range     = "8080"
+    source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
 
@@ -82,9 +82,9 @@ resource "azurerm_network_security_group" "nsg" {
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
-    source_port_range         = "*"
-    destination_port_range    = "3100"
-    source_address_prefix     = "*"
+    source_port_range          = "*"
+    destination_port_range     = "3100"
+    source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
 
@@ -95,9 +95,9 @@ resource "azurerm_network_security_group" "nsg" {
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
-    source_port_range         = "*"
-    destination_port_range    = "3200"
-    source_address_prefix     = "*"
+    source_port_range          = "*"
+    destination_port_range     = "3200"
+    source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
 
@@ -108,9 +108,9 @@ resource "azurerm_network_security_group" "nsg" {
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
-    source_port_range         = "*"
-    destination_port_range    = "22"
-    source_address_prefix     = "*"
+    source_port_range          = "*"
+    destination_port_range     = "22"
+    source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
 
@@ -121,9 +121,9 @@ resource "azurerm_network_security_group" "nsg" {
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "*"
-    source_port_range         = "*"
-    destination_port_range    = "*"
-    source_address_prefix     = "VirtualNetwork"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "VirtualNetwork"
     destination_address_prefix = "VirtualNetwork"
   }
 
@@ -134,9 +134,9 @@ resource "azurerm_network_security_group" "nsg" {
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "*"
-    source_port_range         = "*"
-    destination_port_range    = "*"
-    source_address_prefix     = "AzureLoadBalancer"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "AzureLoadBalancer"
     destination_address_prefix = "*"
   }
 
@@ -147,9 +147,9 @@ resource "azurerm_network_security_group" "nsg" {
     direction                  = "Inbound"
     access                     = "Deny"
     protocol                   = "*"
-    source_port_range         = "*"
-    destination_port_range    = "*"
-    source_address_prefix     = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
 
@@ -160,9 +160,9 @@ resource "azurerm_network_security_group" "nsg" {
     direction                  = "Outbound"
     access                     = "Allow"
     protocol                   = "*"
-    source_port_range         = "*"
-    destination_port_range    = "*"
-    source_address_prefix     = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
 
@@ -172,9 +172,9 @@ resource "azurerm_network_security_group" "nsg" {
     direction                  = "Outbound"
     access                     = "Deny"
     protocol                   = "*"
-    source_port_range         = "*"
-    destination_port_range    = "*"
-    source_address_prefix     = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
 }
@@ -195,7 +195,7 @@ resource "azurerm_public_ip" "this" {
   location            = var.location
   resource_group_name = var.resource_group_name
   allocation_method   = "Static"
-  domain_name_label = "beez360-dashboard"
+  domain_name_label   = "beez360-dashboard"
   sku                 = "Standard"
   tags                = var.tags
 }
