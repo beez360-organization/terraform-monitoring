@@ -40,14 +40,20 @@ variable "data_disk_size_gb" {
 }
 
 
-variable "storage_account_key" {
-  type        = string
-  description = "Primary key of the storage account"
-}
-
 variable "storage_account_name" {
   type        = string
-  description = "Name of the storage account"
+  description = "Name of the storage account (Loki/Tempo backend, accessed via Managed Identity)"
+}
+
+variable "storage_account_id" {
+  type        = string
+  description = "Resource ID of the storage account — used to grant the VM's Managed Identity Blob access"
+}
+
+variable "allowed_ingress_cidrs" {
+  type        = list(string)
+  description = "CIDRs allowed on operator ports (SSH). Empty = VNet-only."
+  default     = []
 }
 
 variable "key_vault_name" {

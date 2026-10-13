@@ -1,22 +1,25 @@
-# This file is maintained automatically by "terraform init".
+# This file is maintained automatically by "tofu init".
 # Manual edits may be lost in future updates.
 
-provider "registry.terraform.io/hashicorp/azurerm" {
-  version     = "3.117.1"
-  constraints = "~> 3.117"
+provider "registry.opentofu.org/hashicorp/azurerm" {
+  version     = "4.74.0"
+  constraints = ">= 4.0.0, < 5.0.0"
   hashes = [
-    "h1:Y9J+emydHX7LpJYKdF9Zmng0zcRR86Awm/t28LNzb68=",
-    "zh:0c513676836e3c50d004ece7d2624a8aff6faac14b833b96feeac2e4bc2c1c12",
-    "zh:50ea01ada95bae2f187db9e926e463f45d860767a85ebc59160414e00e76c35d",
-    "zh:52c2a9edacc06b3f72153f5ef6daca0761c6292158815961fe37f60bc576a3d7",
-    "zh:618eed2a06b19b1a025b45b05891846d570a6a1cca4d23f4942f5a99e1f747ae",
-    "zh:61cde5d3165d7e5ec311d5d89486819cd605c1b2d54611b5c97bd4e97dba2762",
-    "zh:6a873358d5031fc222f5e05f029d1237f3dce8345c767665f393283dfa2627f6",
-    "zh:afdd80064b2a04da311856feb4ed45f77ff4df6c356e8c2b10afb51fe7e61c70",
-    "zh:b09113df7e0e8c8959539bd22bae6c39faeb269ba3c4cd948e742f5cf58c35fb",
-    "zh:d340db7973109761cfc27d52aa02560363337c908b2c99b3628adc5a70a99d5b",
-    "zh:d5a577226ebc8c65e8f19384878a86acc4b51ede4b4a82d37c3b331b0efcd4a7",
-    "zh:e2962b147f9e71732df8dbc74940c10d20906f3c003cbfaa1eb9fabbf601a9f0",
-    "zh:f569b65999264a9416862bca5cd2a6177d94ccb0424f3a4ef424428912b9cb3c",
+    "h1:iNq9H+e+Gd6C57NAg3/Pft6ag0kPktrwdiPb/ojpdtk=",
+    "zh:0debcbfd08d0b98d846ef1664b115759ad11d085cf54cea12f48dbc0c6b6da92",
+    "zh:1fcb81dfb6009636255f599f5ecd3b7f8649d3e492f3d2ae8c8b5b4e0952d181",
+    "zh:27a4df55d857f4e43e9c06bebc3afb922a6d918e7fac864769471d7fc9edbde7",
+    "zh:2eda9a9f352b20cb30c4aa136ec24f5d7d1730860a27ad6c75c7da1f705392cf",
+    "zh:316b4579d652667676144c84e91dc09724a9f85dde197b507dd9830a608e4473",
+    "zh:37b37a14955b7fa531faf0b6d146f5608c47e84887a148e073cf3b71ba0e1a17",
+    "zh:3d555d2fda9c9ec1a71c44d44c68d1ec588d0f7709ae786c062eda18531eb9e4",
+    "zh:402c8a8a3f44d23eec7f71ec7d46d11a45c992f3fe4286a223e8776e1ead069d",
+    "zh:6cc7704c54cc38d6f2305409e966747ea9864f68b8d58ef8ffa670b307c15dba",
+    "zh:91838736bcc29d36a8c932d9384896fe1ae5545b89fb7cdc8a27ab98553b3a85",
+    "zh:af2cfb75743debdfbd3be673bf49aa4563b4f7651c4206673a27823139b29527",
+    "zh:afcb5b07f70c35cee15e80e8b6b1cff951d5525437699b26054bb36726740497",
+    "zh:eb2bfd3977ca08c127c5adfe5d455e3fd9dd360e4a396ac57533fab5ce274434",
+    "zh:eb5d810fa76448fa632ec48c882d0b31f5b5e89f896e487885d3f980009e438f",
+    "zh:ff5f67b26546e8805cb17a04f3f8578be2b3283b6f5de3fa1c92876665610a2c",
   ]
 }

@@ -1,7 +1,11 @@
-
+locals {
+  # Operator ports (Grafana, NGINX, SSH) restricted to this allowlist;
+  # empty list = VNet-only (no public exposure).
+  admin_is_vnet = length(var.allowed_ingress_cidrs) == 0
+}
 
 ##############################
-# NSG
+# NSG — data ports VNet-only, operator ports allowlisted (no public 0.0.0.0/0)
 ##############################
 resource "azurerm_network_security_group" "nsg" {
   name                = "${var.vm_name}-nsg"
@@ -9,112 +13,96 @@ resource "azurerm_network_security_group" "nsg" {
   resource_group_name = var.resource_group_name
   tags                = var.tags
 
-  # Prometheus
+  # --- Data plane: intra-VNet only ---
   security_rule {
-    name                       = "AllowPrometheus"
-    priority                   = 100
+    name                       = "AllowPrometheusVnet"
+    priority                   = 300
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "9090"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "VirtualNetwork"
   }
 
-  # Node Exporter
   security_rule {
-    name                       = "AllowNodeExporter"
-    priority                   = 110
+    name                       = "AllowNodeExporterVnet"
+    priority                   = 310
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "9100"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-  # NGINX
-  security_rule {
-    name                       = "AllowNGINX"
-    priority                   = 115
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "80"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "VirtualNetwork"
   }
 
-
-
-  # Grafana
   security_rule {
-    name                       = "AllowGrafana"
-    priority                   = 120
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "3000"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-
-  # Promitor
-  security_rule {
-    name                       = "AllowPromitor"
-    priority                   = 130
+    name                       = "AllowPromitorVnet"
+    priority                   = 320
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "8080"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "VirtualNetwork"
   }
 
-  # Loki
   security_rule {
-    name                       = "AllowLoki"
-    priority                   = 140
+    name                       = "AllowAlertmanagerVnet"
+    priority                   = 330
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_range     = "3100"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
+    destination_port_range     = "9093"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "VirtualNetwork"
   }
 
-  # Tempo
+  # --- Operator: Grafana / NGINX / SSH from the allowlist (or VNet when empty) ---
   security_rule {
-    name                       = "AllowTempo"
-    priority                   = 150
+    name                       = "AllowGrafana"
+    priority                   = 400
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_range     = "3200"
-    source_address_prefix      = "*"
+    destination_port_range     = "3000"
+    source_address_prefix      = local.admin_is_vnet ? "VirtualNetwork" : null
+    source_address_prefixes    = local.admin_is_vnet ? null : var.allowed_ingress_cidrs
     destination_address_prefix = "*"
   }
 
-  # SSH
+  security_rule {
+    name                       = "AllowNginx"
+    priority                   = 410
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "80"
+    source_address_prefix      = local.admin_is_vnet ? "VirtualNetwork" : null
+    source_address_prefixes    = local.admin_is_vnet ? null : var.allowed_ingress_cidrs
+    destination_address_prefix = "*"
+  }
+
   security_rule {
     name                       = "AllowSSH"
-    priority                   = 160
+    priority                   = 420
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "22"
-    source_address_prefix      = "*"
+    source_address_prefix      = local.admin_is_vnet ? "VirtualNetwork" : null
+    source_address_prefixes    = local.admin_is_vnet ? null : var.allowed_ingress_cidrs
     destination_address_prefix = "*"
   }
 
-  # VNet
+  # --- Baseline ---
   security_rule {
     name                       = "AllowVnetInBound"
     priority                   = 2000
@@ -127,7 +115,6 @@ resource "azurerm_network_security_group" "nsg" {
     destination_address_prefix = "VirtualNetwork"
   }
 
-  # Azure LB
   security_rule {
     name                       = "AllowAzureLoadBalancer"
     priority                   = 2001
@@ -140,36 +127,10 @@ resource "azurerm_network_security_group" "nsg" {
     destination_address_prefix = "*"
   }
 
-  # Deny all inbound
   security_rule {
     name                       = "DenyAllInBound"
     priority                   = 3000
     direction                  = "Inbound"
-    access                     = "Deny"
-    protocol                   = "*"
-    source_port_range          = "*"
-    destination_port_range     = "*"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-
-  # OUTBOUND (corrigé)
-  security_rule {
-    name                       = "AllowInternetOutBound"
-    priority                   = 100
-    direction                  = "Outbound"
-    access                     = "Allow"
-    protocol                   = "*"
-    source_port_range          = "*"
-    destination_port_range     = "*"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-
-  security_rule {
-    name                       = "DenyAllOutBound"
-    priority                   = 4000
-    direction                  = "Outbound"
     access                     = "Deny"
     protocol                   = "*"
     source_port_range          = "*"
@@ -223,11 +184,16 @@ resource "azurerm_network_interface" "this" {
 ##############################
 locals {
   cloud_init = templatefile("${path.module}/cloud-init.yaml.tpl", {
-    GRAFANA_URL        = var.grafana_url
-    PROM_URL           = var.prometheus_url
-    LOKI_URL           = var.loki_url
-    PROM_NODE_EXPORTER = var.node_exporter_target
-    PROM_PROMITOR      = var.promitor_target
+    GRAFANA_URL            = var.grafana_url
+    PROM_URL               = var.prometheus_url
+    LOKI_URL               = var.loki_url
+    PROM_NODE_EXPORTER     = var.node_exporter_target
+    PROM_PROMITOR          = var.promitor_target
+    TENANT_ID              = var.tenant_id
+    SUBSCRIPTION_ID        = var.subscription_id
+    MONITORED_RG           = var.monitored_resource_group
+    GRAFANA_ADMIN_PASSWORD = var.grafana_admin_password
+    ALERT_WEBHOOK_URL      = var.alert_webhook_url
   })
 }
 
@@ -268,4 +234,41 @@ resource "azurerm_linux_virtual_machine" "this" {
   custom_data = base64encode(local.cloud_init)
 
   tags = var.tags
+}
+
+##############################
+# Managed Identity → Azure Monitor (Promitor scraping)
+# Monitoring Reader on the observed resource group.
+##############################
+resource "azurerm_role_assignment" "promitor_monitoring_reader" {
+  count = var.monitored_resource_group != "" ? 1 : 0
+
+  scope                = "/subscriptions/${var.subscription_id}/resourceGroups/${var.monitored_resource_group}"
+  role_definition_name = "Monitoring Reader"
+  principal_id         = azurerm_linux_virtual_machine.this.identity[0].principal_id
+}
+
+##############################
+# Data disk (resilience) — Prometheus TSDB + Grafana DB survive VM recreation.
+# Premium SSD, mounted at /data by cloud-init.
+##############################
+resource "azurerm_managed_disk" "data" {
+  name                 = "${var.vm_name}-data"
+  location             = var.location
+  resource_group_name  = var.resource_group_name
+  storage_account_type = "Premium_LRS"
+  create_option        = "Empty"
+  disk_size_gb         = var.data_disk_size_gb
+  tags                 = var.tags
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+resource "azurerm_virtual_machine_data_disk_attachment" "data" {
+  managed_disk_id    = azurerm_managed_disk.data.id
+  virtual_machine_id = azurerm_linux_virtual_machine.this.id
+  lun                = 0
+  caching            = "ReadWrite"
 }

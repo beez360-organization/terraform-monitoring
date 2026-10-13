@@ -1,0 +1,88 @@
+name: Observability (Azure-native)
+
+# New monitoring stack (observability/): Managed Grafana + alert routing +
+# dashboards as code. Runs independently of the legacy VM stack
+# (deployment.yaml, repo root), which keeps working until decommissioned.
+
+on:
+  pull_request:
+    paths: ["observability/**", ".github/workflows/observability.yaml"]
+  push:
+    branches: [main]
+    paths: ["observability/**", ".github/workflows/observability.yaml"]
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  ARM_USE_OIDC: "true"
+  ARM_CLIENT_ID: ${{ secrets.CLIENT_ID_MONITOR }}
+  ARM_TENANT_ID: ${{ secrets.TENANT_ID_MONITOR }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID_MONITOR }}
+  TF_VAR_subscription_id: ${{ secrets.SUBSCRIPTION_ID_MONITOR }}
+  TF_VAR_alert_webhook_url: ${{ secrets.ALERT_WEBHOOK_URL }}
+
+defaults:
+  run:
+    working-directory: observability
+
+jobs:
+  checks:
+    name: fmt · validate · dashboards up to date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: v1.12.0
+      - run: tofu fmt -check -recursive
+      - run: tofu init -backend=false && tofu validate
+      - name: Dashboards JSON regenerated from generate.py
+        run: |
+          python3 -I dashboards/generate.py
+          git diff --exit-code -- dashboards/ || {
+            echo "::error::dashboards/*.json are stale: run python3 -I observability/dashboards/generate.py and commit"
+            exit 1
+          }
+
+  plan:
+    needs: checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: v1.12.0
+      - run: tofu init -input=false
+      - run: tofu plan -input=false -out=tfplan
+      - uses: actions/upload-artifact@v4
+        with:
+          name: observability-tfplan
+          path: observability/tfplan
+          retention-days: 7
+
+  apply:
+    if: github.event_name == 'push'
+    needs: plan
+    runs-on: ubuntu-latest
+    environment: observability
+    steps:
+      - uses: actions/checkout@v4
+      - uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: v1.12.0
+      - uses: actions/download-artifact@v4
+        with:
+          name: observability-tfplan
+          path: observability
+      - run: tofu init -input=false
+      - run: tofu apply -input=false tfplan
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.CLIENT_ID_MONITOR }}
+          tenant-id: ${{ secrets.TENANT_ID_MONITOR }}
+          subscription-id: ${{ secrets.SUBSCRIPTION_ID_MONITOR }}
+      - name: Publish dashboards
+        run: scripts/publish-dashboards.sh "$(tofu output -raw grafana_name)" "$(tofu output -raw resource_group_name)"

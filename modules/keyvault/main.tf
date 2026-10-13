@@ -6,10 +6,10 @@ resource "azurerm_key_vault" "this" {
 
   sku_name = "standard"
 
-  enable_rbac_authorization = true
+  rbac_authorization_enabled = true
 
-  soft_delete_retention_days = 7
-  purge_protection_enabled   = false
+  soft_delete_retention_days = 90
+  purge_protection_enabled   = true
   tags                       = var.tags
 }
 data "azurerm_client_config" "current" {}

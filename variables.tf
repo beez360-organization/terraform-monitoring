@@ -47,9 +47,29 @@ variable "admin_username" {
 }
 
 variable "admin_password" {
-  description = "Mot de passe admin des VMs"
+  description = "Optional override for the VM admin password. Leave null to auto-generate a strong password (stored in Key Vault). NEVER commit a real value."
   type        = string
   sensitive   = true
+  default     = null
+}
+
+variable "allowed_ingress_cidrs" {
+  description = "CIDRs allowed to reach operator ports (Grafana 3000, NGINX 80, SSH 22). Empty = VNet-only (no public access). Data-plane ports (Prometheus, Loki, Tempo, OTLP) are always VNet-only."
+  type        = list(string)
+  default     = []
+}
+
+variable "monitored_resource_group" {
+  description = "Resource group that Promitor scrapes via Azure Monitor (the platform RG to observe)."
+  type        = string
+  default     = ""
+}
+
+variable "alert_webhook_url" {
+  description = "Incoming webhook (Slack/Teams) for Grafana alerts. Empty = rules defined but not delivered. Prefer setting via TF_VAR_alert_webhook_url (it's secret-ish)."
+  type        = string
+  sensitive   = true
+  default     = ""
 }
 
 variable "tags" {
@@ -99,11 +119,8 @@ variable "logs_traces_ip" {
 
 }
 variable "subscription_id" {
-
-  description = "subscriptionn id "
+  description = "Azure subscription id Promitor scrapes (set in tfvars or TF_VAR_subscription_id — not hardcoded)."
   type        = string
-  default     = "7df6c09e-5b30-41d7-8bf2-d39b61f07de3"
-
 }
 variable "key_vault_name" {
   type = string

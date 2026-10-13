@@ -18,6 +18,17 @@ packages:
   - kafkacat
 bootcmd:
   - mkdir -p /etc/fluent-bit
+
+# Resilience: format (once) and mount the Premium SSD data disk at /data.
+# overwrite:false → data survives VM recreation when the disk is re-attached.
+fs_setup:
+  - device: /dev/disk/azure/scsi1/lun0
+    filesystem: ext4
+    label: datadisk
+    overwrite: false
+mounts:
+  - ["/dev/disk/azure/scsi1/lun0", "/data", "ext4", "defaults,nofail", "0", "2"]
+
 write_files:
 
 
@@ -52,12 +63,12 @@ write_files:
 
       storage_config:
         boltdb_shipper:
-          active_index_directory: /var/loki/index
-          cache_location: /var/loki/cache
+          active_index_directory: /data/loki/index
+          cache_location: /data/loki/cache
         azure:
           container_name: "loki-logs"
           account_name: "__STORAGE_ACCOUNT_NAME__"
-          account_key: "__STORAGE_ACCOUNT_KEY__"
+          use_managed_identity: true
 
       limits_config:
         ingestion_rate_mb: 10
@@ -65,20 +76,13 @@ write_files:
         allow_structured_metadata: false
 
       compactor:
-        working_directory: /var/loki/compactor
+        working_directory: /data/loki/compactor
         retention_enabled: true
+        retention_delete_delay: 2h
         shared_store: azure
 
   # =========================
-  # Loki ENV 
-  # =========================
-  - path: /etc/loki/env
-    permissions: "0600"
-    content: |
-      STORAGE_ACCOUNT_KEY=__STORAGE_ACCOUNT_KEY__
-
-  # =========================
-  # Loki systemd
+  # Loki systemd (auth via VM Managed Identity — no key on disk)
   # =========================
   - path: /etc/systemd/system/loki.service
     permissions: "0644"
@@ -88,9 +92,8 @@ write_files:
       After=network-online.target
 
       [Service]
-      ExecStart=/usr/local/bin/loki -config.file=/etc/loki/local-config.yaml -config.expand-env=true
+      ExecStart=/usr/local/bin/loki -config.file=/etc/loki/local-config.yaml
       Restart=always
-      EnvironmentFile=/etc/loki/env
       LimitNOFILE=65536
 
       [Install]
@@ -217,9 +220,9 @@ runcmd:
   - mv /tmp/loki-linux-amd64 /usr/local/bin/loki
   - chmod +x /usr/local/bin/loki
 
-  # dirs
-  - mkdir -p /etc/loki /var/loki/index /var/loki/cache /var/loki/compactor
-  - chown -R azureuser:azureuser /var/loki
+  # dirs (data lives on the mounted /data disk for resilience)
+  - mkdir -p /etc/loki /data/loki/index /data/loki/cache /data/loki/compactor
+  - chown -R azureuser:azureuser /data/loki
 
   # systemd
   - systemctl daemon-reload

@@ -15,8 +15,16 @@ resource "azurerm_eventhub" "logs" {
   message_retention = 1
 }
 
-data "azurerm_eventhub_namespace_authorization_rule" "default" {
-  name                = "RootManageSharedAccessKey"
+# Least-privilege SAS for Fluent Bit: Listen only (no Send, no Manage),
+# scoped to the single `logs` event hub — replaces the namespace-wide
+# RootManageSharedAccessKey that was previously handed to the VM.
+resource "azurerm_eventhub_authorization_rule" "fluentbit_listen" {
+  name                = "fluentbit-listen"
   namespace_name      = azurerm_eventhub_namespace.this.name
+  eventhub_name       = azurerm_eventhub.logs.name
   resource_group_name = var.resource_group_name
+
+  listen = true
+  send   = false
+  manage = false
 }
