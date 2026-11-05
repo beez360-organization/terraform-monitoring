@@ -1,0 +1,15 @@
+# Copy to terraform.tfvars (identifiers only) or pass the values as TF_VAR_*.
+# Identifiers only — the Teams webhook goes through TF_VAR_alert_webhook_url.
+
+subscription_id = "<subscription hosting Grafana>"
+
+monitored_subscription_ids = [
+  "<BEEZ360_NONPROD_SUBSCRIPTION_ID>",
+  "<BEEZ360_PROD_SUBSCRIPTION_ID>",
+  "<legacy subscription, while beez360/ otacos/ bigm-burger/ run>",
+]
+
+grafana_admin_group_object_ids  = ["<Entra group: platform team>"]
+grafana_viewer_group_object_ids = ["<Entra group: support / product>"]
+
+alert_email_receivers = ["platform@beez360.com"]

@@ -65,3 +65,38 @@ variable "loki_url" {
   type        = string
   description = "URL de Loki"
 }
+
+variable "allowed_ingress_cidrs" {
+  type        = list(string)
+  description = "CIDRs allowed on operator ports (Grafana 3000, NGINX 80, SSH 22). Empty = VNet-only."
+  default     = []
+}
+
+variable "tenant_id" {
+  type        = string
+  description = "Azure AD tenant id (injected into the Promitor declaration)."
+}
+
+variable "subscription_id" {
+  type        = string
+  description = "Subscription Promitor scrapes (injected into the Promitor declaration)."
+}
+
+variable "monitored_resource_group" {
+  type        = string
+  description = "Resource group Promitor scrapes; also the scope granted to the VM's Managed Identity (Monitoring Reader). Empty = skip role assignment."
+  default     = ""
+}
+
+variable "grafana_admin_password" {
+  type        = string
+  description = "Grafana admin password (generated upstream, stored in Key Vault)."
+  sensitive   = true
+}
+
+variable "alert_webhook_url" {
+  type        = string
+  description = "Incoming webhook (Slack/Teams) for Grafana alert notifications. Empty = alerts are defined but not delivered until set."
+  sensitive   = true
+  default     = ""
+}

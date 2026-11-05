@@ -1,0 +1,526 @@
+{
+  "uid": "beez360-logs",
+  "title": "Beez360 · Logs & HTTP",
+  "description": "Logs HTTP, console des conteneurs, événements plateforme et erreurs PostgreSQL (diagnostics → Log Analytics de la plateforme).",
+  "tags": [
+    "beez360"
+  ],
+  "editable": true,
+  "graphTooltip": 1,
+  "schemaVersion": 39,
+  "version": 1,
+  "time": {
+    "from": "now-3h",
+    "to": "now"
+  },
+  "refresh": "5m",
+  "timezone": "browser",
+  "templating": {
+    "list": [
+      {
+        "name": "ds",
+        "label": "Data source",
+        "type": "datasource",
+        "query": "grafana-azure-monitor-datasource",
+        "hide": 0,
+        "refresh": 1,
+        "current": {},
+        "options": []
+      },
+      {
+        "name": "sub",
+        "label": "Subscription",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-azure-monitor-datasource",
+          "uid": "${ds}"
+        },
+        "query": {
+          "queryType": "Azure Subscriptions",
+          "refId": "A"
+        },
+        "refresh": 1,
+        "hide": 0,
+        "multi": false,
+        "includeAll": false,
+        "current": {},
+        "options": [],
+        "sort": 1
+      },
+      {
+        "name": "platform",
+        "label": "Platform",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-azure-monitor-datasource",
+          "uid": "${ds}"
+        },
+        "query": {
+          "queryType": "Azure Resource Groups",
+          "subscription": "$sub",
+          "refId": "A"
+        },
+        "regex": "/^(beez360-[a-z0-9-]+-rg)$/",
+        "refresh": 1,
+        "hide": 0,
+        "sort": 1,
+        "current": {},
+        "options": []
+      },
+      {
+        "name": "search",
+        "label": "Recherche",
+        "type": "textbox",
+        "query": "",
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "hide": 0
+      }
+    ]
+  },
+  "links": [
+    {
+      "title": "Beez360",
+      "type": "dashboards",
+      "tags": [
+        "beez360"
+      ],
+      "asDropdown": true,
+      "includeVars": true,
+      "keepTime": true
+    }
+  ],
+  "annotations": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "row",
+      "title": "HTTP (diagnostics App Service)",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "Statuts HTTP par application",
+      "description": "",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Log Analytics",
+          "azureLogAnalytics": {
+            "query": "AppServiceHTTPLogs | where $__timeFilter(TimeGenerated)\n| extend App = tostring(split(_ResourceId, '/')[-1])\n| extend Status = strcat(App, \" · \", tostring(ScStatus / 100), \"xx\")\n| summarize Requests = count() by bin(TimeGenerated, $__interval), Status\n| order by TimeGenerated asc",
+            "resources": [
+              "/subscriptions/$sub/resourceGroups/$platform"
+            ],
+            "resultFormat": "time_series",
+            "dashboardTime": false
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 2,
+            "fillOpacity": 12,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 2,
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 24,
+        "h": 8
+      },
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${ds}"
+      }
+    },
+    {
+      "type": "table",
+      "title": "URLs en erreur 5xx",
+      "description": "",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Log Analytics",
+          "azureLogAnalytics": {
+            "query": "AppServiceHTTPLogs | where $__timeFilter(TimeGenerated) and ScStatus >= 500\n| extend App = tostring(split(_ResourceId, '/')[-1])\n| summarize Errors = count(), LastSeen = max(TimeGenerated) by App, CsMethod, CsUriStem, ScStatus\n| top 20 by Errors desc",
+            "resources": [
+              "/subscriptions/$sub/resourceGroups/$platform"
+            ],
+            "resultFormat": "table",
+            "dashboardTime": false
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "id": 3,
+      "gridPos": {
+        "x": 0,
+        "y": 9,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${ds}"
+      }
+    },
+    {
+      "type": "table",
+      "title": "URLs les plus lentes (P95)",
+      "description": "",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Log Analytics",
+          "azureLogAnalytics": {
+            "query": "AppServiceHTTPLogs | where $__timeFilter(TimeGenerated)\n| extend App = tostring(split(_ResourceId, '/')[-1])\n| summarize Requests = count(), P95_ms = percentile(TimeTaken, 95) by App, CsMethod, CsUriStem\n| where Requests > 5\n| top 20 by P95_ms desc",
+            "resources": [
+              "/subscriptions/$sub/resourceGroups/$platform"
+            ],
+            "resultFormat": "table",
+            "dashboardTime": false
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "id": 4,
+      "gridPos": {
+        "x": 12,
+        "y": 9,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${ds}"
+      }
+    },
+    {
+      "id": 5,
+      "type": "row",
+      "title": "Logs applicatifs (console des conteneurs)",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "Lignes d'erreur par application",
+      "description": "",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Log Analytics",
+          "azureLogAnalytics": {
+            "query": "AppServiceConsoleLogs | where $__timeFilter(TimeGenerated)\n| where Level =~ \"Error\" or ResultDescription has_any (\"error\", \"exception\", \"fatal\")\n| extend App = tostring(split(_ResourceId, '/')[-1])\n| summarize Errors = count() by bin(TimeGenerated, $__interval), App\n| order by TimeGenerated asc",
+            "resources": [
+              "/subscriptions/$sub/resourceGroups/$platform"
+            ],
+            "resultFormat": "time_series",
+            "dashboardTime": false
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 2,
+            "fillOpacity": 12,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 6,
+      "gridPos": {
+        "x": 0,
+        "y": 19,
+        "w": 24,
+        "h": 7
+      },
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${ds}"
+      }
+    },
+    {
+      "type": "logs",
+      "title": "Console — recherche « $search »",
+      "description": "Filtrer avec la variable « Recherche » (texte libre, sensible à la casse).",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Log Analytics",
+          "azureLogAnalytics": {
+            "query": "AppServiceConsoleLogs | where $__timeFilter(TimeGenerated)\n| where ResultDescription contains \"$search\"\n| extend App = tostring(split(_ResourceId, '/')[-1])\n| project TimeGenerated, App, Level, Message = ResultDescription\n| order by TimeGenerated desc\n| take 500",
+            "resources": [
+              "/subscriptions/$sub/resourceGroups/$platform"
+            ],
+            "resultFormat": "logs",
+            "dashboardTime": false
+          }
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true,
+        "dedupStrategy": "none"
+      },
+      "id": 7,
+      "gridPos": {
+        "x": 0,
+        "y": 26,
+        "w": 24,
+        "h": 12
+      },
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${ds}"
+      }
+    },
+    {
+      "id": 8,
+      "type": "row",
+      "title": "Plateforme App Service & PostgreSQL",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 38,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "type": "table",
+      "title": "Événements conteneurs (démarrage, pull d'image, crash)",
+      "description": "",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Log Analytics",
+          "azureLogAnalytics": {
+            "query": "AppServicePlatformLogs | where $__timeFilter(TimeGenerated)\n| extend App = tostring(split(_ResourceId, '/')[-1])\n| project TimeGenerated, App, Level, Message\n| order by TimeGenerated desc\n| take 200",
+            "resources": [
+              "/subscriptions/$sub/resourceGroups/$platform"
+            ],
+            "resultFormat": "table",
+            "dashboardTime": false
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "id": 9,
+      "gridPos": {
+        "x": 0,
+        "y": 39,
+        "w": 12,
+        "h": 10
+      },
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${ds}"
+      }
+    },
+    {
+      "type": "table",
+      "title": "PostgreSQL — erreurs",
+      "description": "",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Log Analytics",
+          "azureLogAnalytics": {
+            "query": "AzureDiagnostics | where $__timeFilter(TimeGenerated)\n| where ResourceProvider == \"MICROSOFT.DBFORPOSTGRESQL\" and Category == \"PostgreSQLLogs\"\n| where Message has_any (\"ERROR\", \"FATAL\", \"PANIC\")\n| project TimeGenerated, Server = Resource, Message\n| order by TimeGenerated desc\n| take 200",
+            "resources": [
+              "/subscriptions/$sub/resourceGroups/$platform"
+            ],
+            "resultFormat": "table",
+            "dashboardTime": false
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "id": 10,
+      "gridPos": {
+        "x": 12,
+        "y": 39,
+        "w": 12,
+        "h": 10
+      },
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${ds}"
+      }
+    }
+  ]
+}

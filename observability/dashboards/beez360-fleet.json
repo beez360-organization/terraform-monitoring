@@ -1,0 +1,682 @@
+{
+  "uid": "beez360-fleet",
+  "title": "Beez360 · Parc des plateformes",
+  "description": "Vue transverse de toutes les plateformes (prod, non-prod, legacy) via Azure Resource Graph : inventaire, alertes actives, exposition réseau, bases de données.",
+  "tags": [
+    "beez360"
+  ],
+  "editable": true,
+  "graphTooltip": 1,
+  "schemaVersion": 39,
+  "version": 1,
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "refresh": "15m",
+  "timezone": "browser",
+  "templating": {
+    "list": [
+      {
+        "name": "ds",
+        "label": "Data source",
+        "type": "datasource",
+        "query": "grafana-azure-monitor-datasource",
+        "hide": 0,
+        "refresh": 1,
+        "current": {},
+        "options": []
+      },
+      {
+        "name": "sub",
+        "label": "Subscription",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-azure-monitor-datasource",
+          "uid": "${ds}"
+        },
+        "query": {
+          "queryType": "Azure Subscriptions",
+          "refId": "A"
+        },
+        "refresh": 1,
+        "hide": 0,
+        "multi": true,
+        "includeAll": true,
+        "current": {},
+        "options": [],
+        "sort": 1
+      }
+    ]
+  },
+  "links": [
+    {
+      "title": "Beez360",
+      "type": "dashboards",
+      "tags": [
+        "beez360"
+      ],
+      "asDropdown": true,
+      "includeVars": true,
+      "keepTime": true
+    }
+  ],
+  "annotations": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "row",
+      "title": "Parc",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "type": "stat",
+      "title": "Plateformes",
+      "description": "",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Resource Graph",
+          "subscriptions": [
+            "$sub"
+          ],
+          "azureResourceGraph": {
+            "query": "resourcecontainers\n| where type == 'microsoft.resources/subscriptions/resourcegroups' and name startswith 'beez360-' and name endswith '-rg'\n| where name !contains 'tfstate' and name !contains 'observability'\n| summarize Platforms = count()",
+            "resultFormat": "table"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "green"
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "center",
+        "orientation": "auto"
+      },
+      "id": 2,
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${ds}"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Web apps",
+      "description": "",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Resource Graph",
+          "subscriptions": [
+            "$sub"
+          ],
+          "azureResourceGraph": {
+            "query": "resources | where type =~ 'microsoft.web/sites' and resourceGroup startswith 'beez360-' | summarize Apps = count()",
+            "resultFormat": "table"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "green"
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "center",
+        "orientation": "auto"
+      },
+      "id": 3,
+      "gridPos": {
+        "x": 6,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${ds}"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Web apps arrêtées",
+      "description": "",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Resource Graph",
+          "subscriptions": [
+            "$sub"
+          ],
+          "azureResourceGraph": {
+            "query": "resources | where type =~ 'microsoft.web/sites' and resourceGroup startswith 'beez360-'\n| where tostring(properties.state) != 'Running' | summarize Stopped = count()",
+            "resultFormat": "table"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "green"
+              },
+              {
+                "value": 1,
+                "color": "red"
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "center",
+        "orientation": "auto"
+      },
+      "id": 4,
+      "gridPos": {
+        "x": 12,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${ds}"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Alertes actives",
+      "description": "",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Resource Graph",
+          "subscriptions": [
+            "$sub"
+          ],
+          "azureResourceGraph": {
+            "query": "alertsmanagementresources\n| where type =~ 'microsoft.alertsmanagement/alerts'\n| where tostring(properties.essentials.monitorCondition) == 'Fired'\n| where tostring(properties.essentials.targetResourceGroup) startswith 'beez360-'\n| summarize Fired = count()",
+            "resultFormat": "table"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "green"
+              },
+              {
+                "value": 1,
+                "color": "red"
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "center",
+        "orientation": "auto"
+      },
+      "id": 5,
+      "gridPos": {
+        "x": 18,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${ds}"
+      }
+    },
+    {
+      "type": "table",
+      "title": "Inventaire des plateformes",
+      "description": "",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Resource Graph",
+          "subscriptions": [
+            "$sub"
+          ],
+          "azureResourceGraph": {
+            "query": "resourcecontainers\n| where type == 'microsoft.resources/subscriptions/resourcegroups' and name startswith 'beez360-' and name endswith '-rg'\n| project Platform = name, Type = tostring(tags.PlatformType), Tier = tostring(tags.Tier),\n          Environment = tostring(tags.Environment), Country = tostring(tags.Country),\n          CostCenter = tostring(tags.CostCenter), Region = location, subscriptionId\n| order by Type asc, Platform asc",
+            "resultFormat": "table"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "id": 6,
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 24,
+        "h": 9
+      },
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${ds}"
+      }
+    },
+    {
+      "id": 7,
+      "type": "row",
+      "title": "Alertes & posture",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "type": "table",
+      "title": "Alertes déclenchées",
+      "description": "",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Resource Graph",
+          "subscriptions": [
+            "$sub"
+          ],
+          "azureResourceGraph": {
+            "query": "alertsmanagementresources\n| where type =~ 'microsoft.alertsmanagement/alerts'\n| where tostring(properties.essentials.monitorCondition) == 'Fired'\n| where tostring(properties.essentials.targetResourceGroup) startswith 'beez360-'\n| project Started = todatetime(properties.essentials.startDateTime), Severity = tostring(properties.essentials.severity),\n          Alert = name, Platform = tostring(properties.essentials.targetResourceGroup),\n          Resource = tostring(split(tostring(properties.essentials.targetResource), '/')[-1])\n| order by Started desc",
+            "resultFormat": "table"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "id": 8,
+      "gridPos": {
+        "x": 0,
+        "y": 15,
+        "w": 24,
+        "h": 8
+      },
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${ds}"
+      }
+    },
+    {
+      "type": "table",
+      "title": "Exposition réseau des services de données",
+      "description": "« Enabled » sans private endpoint sur une plateforme prod = à corriger.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Resource Graph",
+          "subscriptions": [
+            "$sub"
+          ],
+          "azureResourceGraph": {
+            "query": "resources\n| where resourceGroup startswith 'beez360-'\n| where type in~ ('microsoft.keyvault/vaults', 'microsoft.storage/storageaccounts',\n                  'microsoft.containerregistry/registries', 'microsoft.dbforpostgresql/flexibleservers',\n                  'microsoft.cache/redis')\n| extend PublicAccess = coalesce(tostring(properties.publicNetworkAccess), tostring(properties.network.publicNetworkAccess))\n| extend PrivateEndpoints = array_length(properties.privateEndpointConnections)\n| project Platform = resourceGroup, Service = tostring(split(type, '/')[1]), Name = name, PublicAccess, PrivateEndpoints\n| order by Platform asc, Service asc",
+            "resultFormat": "table"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "id": 9,
+      "gridPos": {
+        "x": 0,
+        "y": 23,
+        "w": 24,
+        "h": 9
+      },
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${ds}"
+      }
+    },
+    {
+      "id": 10,
+      "type": "row",
+      "title": "Données",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 32,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "type": "table",
+      "title": "Serveurs PostgreSQL",
+      "description": "",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Resource Graph",
+          "subscriptions": [
+            "$sub"
+          ],
+          "azureResourceGraph": {
+            "query": "resources\n| where type =~ 'microsoft.dbforpostgresql/flexibleservers' and resourceGroup startswith 'beez360-'\n| project Platform = resourceGroup, Server = name, Version = tostring(properties.version), Sku = tostring(sku.name),\n          HA = tostring(properties.highAvailability.mode), StorageGB = toint(properties.storage.storageSizeGB),\n          GeoBackup = tostring(properties.backup.geoRedundantBackup), BackupDays = toint(properties.backup.backupRetentionDays),\n          State = tostring(properties.state)\n| order by Platform asc",
+            "resultFormat": "table"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "filterable": true,
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "id": 11,
+      "gridPos": {
+        "x": 0,
+        "y": 33,
+        "w": 24,
+        "h": 8
+      },
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${ds}"
+      }
+    },
+    {
+      "type": "piechart",
+      "title": "Ressources par type",
+      "description": "",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Resource Graph",
+          "subscriptions": [
+            "$sub"
+          ],
+          "azureResourceGraph": {
+            "query": "resources | where resourceGroup startswith 'beez360-'\n| summarize Count = count() by Type = tostring(split(type, '/')[1])\n| order by Count desc",
+            "resultFormat": "table"
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "pieType": "donut",
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "value",
+            "percent"
+          ]
+        }
+      },
+      "id": 12,
+      "gridPos": {
+        "x": 0,
+        "y": 41,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${ds}"
+      }
+    },
+    {
+      "type": "piechart",
+      "title": "Plateformes par type",
+      "description": "",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Resource Graph",
+          "subscriptions": [
+            "$sub"
+          ],
+          "azureResourceGraph": {
+            "query": "resourcecontainers\n| where type == 'microsoft.resources/subscriptions/resourcegroups' and name startswith 'beez360-' and name endswith '-rg'\n| summarize Count = count() by Type = coalesce(tostring(tags.PlatformType), 'legacy')",
+            "resultFormat": "table"
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "pieType": "donut",
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "value",
+            "percent"
+          ]
+        }
+      },
+      "id": 13,
+      "gridPos": {
+        "x": 12,
+        "y": 41,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${ds}"
+      }
+    }
+  ]
+}
