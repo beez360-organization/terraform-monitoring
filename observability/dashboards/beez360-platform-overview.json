@@ -131,6 +131,48 @@
         "options": []
       },
       {
+        "name": "beeztable",
+        "label": "BeezTable",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-azure-monitor-datasource",
+          "uid": "${ds}"
+        },
+        "query": {
+          "queryType": "Azure Resource Names",
+          "subscription": "$sub",
+          "resourceGroup": "$platform",
+          "namespace": "microsoft.web/sites",
+          "refId": "A"
+        },
+        "regex": "/^(.*-beeztable-webapp)$/",
+        "refresh": 2,
+        "hide": 2,
+        "current": {},
+        "options": []
+      },
+      {
+        "name": "beezorder",
+        "label": "Beez Order",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-azure-monitor-datasource",
+          "uid": "${ds}"
+        },
+        "query": {
+          "queryType": "Azure Resource Names",
+          "subscription": "$sub",
+          "resourceGroup": "$platform",
+          "namespace": "microsoft.web/sites",
+          "refId": "A"
+        },
+        "regex": "/^(.*-beezorder-webapp)$/",
+        "refresh": 2,
+        "hide": 2,
+        "current": {},
+        "options": []
+      },
+      {
         "name": "backendplan",
         "label": "Plan backend",
         "type": "query",
@@ -743,13 +785,380 @@
       }
     },
     {
+      "type": "stat",
+      "title": "BeezTable · erreurs 5xx",
+      "description": "",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Monitor",
+          "subscription": "$sub",
+          "azureMonitor": {
+            "resources": [
+              {
+                "subscription": "$sub",
+                "resourceGroup": "$platform",
+                "metricNamespace": "microsoft.web/sites",
+                "resourceName": "$beeztable"
+              }
+            ],
+            "metricNamespace": "microsoft.web/sites",
+            "metricName": "Http5xx",
+            "aggregation": "Total",
+            "timeGrain": "auto",
+            "allowedTimeGrainsMs": [],
+            "dimensionFilters": [],
+            "alias": ""
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "green"
+              },
+              {
+                "value": 1,
+                "color": "orange"
+              },
+              {
+                "value": 10,
+                "color": "red"
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "center",
+        "orientation": "auto"
+      },
       "id": 8,
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${ds}"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Beez Order · erreurs 5xx",
+      "description": "",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Monitor",
+          "subscription": "$sub",
+          "azureMonitor": {
+            "resources": [
+              {
+                "subscription": "$sub",
+                "resourceGroup": "$platform",
+                "metricNamespace": "microsoft.web/sites",
+                "resourceName": "$beezorder"
+              }
+            ],
+            "metricNamespace": "microsoft.web/sites",
+            "metricName": "Http5xx",
+            "aggregation": "Total",
+            "timeGrain": "auto",
+            "allowedTimeGrainsMs": [],
+            "dimensionFilters": [],
+            "alias": ""
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "green"
+              },
+              {
+                "value": 1,
+                "color": "orange"
+              },
+              {
+                "value": 10,
+                "color": "red"
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "area",
+        "textMode": "value",
+        "justifyMode": "center",
+        "orientation": "auto"
+      },
+      "id": 9,
+      "gridPos": {
+        "x": 4,
+        "y": 5,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${ds}"
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Disponibilité des applications (health check)",
+      "description": "100 % = toutes les instances de l'application répondent au health check (health_check_path)",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Monitor",
+          "subscription": "$sub",
+          "azureMonitor": {
+            "resources": [
+              {
+                "subscription": "$sub",
+                "resourceGroup": "$platform",
+                "metricNamespace": "microsoft.web/sites",
+                "resourceName": "$api"
+              }
+            ],
+            "metricNamespace": "microsoft.web/sites",
+            "metricName": "HealthCheckStatus",
+            "aggregation": "Average",
+            "timeGrain": "auto",
+            "allowedTimeGrainsMs": [],
+            "dimensionFilters": [],
+            "alias": "API"
+          }
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Monitor",
+          "subscription": "$sub",
+          "azureMonitor": {
+            "resources": [
+              {
+                "subscription": "$sub",
+                "resourceGroup": "$platform",
+                "metricNamespace": "microsoft.web/sites",
+                "resourceName": "$backoffice"
+              }
+            ],
+            "metricNamespace": "microsoft.web/sites",
+            "metricName": "HealthCheckStatus",
+            "aggregation": "Average",
+            "timeGrain": "auto",
+            "allowedTimeGrainsMs": [],
+            "dimensionFilters": [],
+            "alias": "Backoffice"
+          }
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Monitor",
+          "subscription": "$sub",
+          "azureMonitor": {
+            "resources": [
+              {
+                "subscription": "$sub",
+                "resourceGroup": "$platform",
+                "metricNamespace": "microsoft.web/sites",
+                "resourceName": "$clickcollect"
+              }
+            ],
+            "metricNamespace": "microsoft.web/sites",
+            "metricName": "HealthCheckStatus",
+            "aggregation": "Average",
+            "timeGrain": "auto",
+            "allowedTimeGrainsMs": [],
+            "dimensionFilters": [],
+            "alias": "Click & Collect"
+          }
+        },
+        {
+          "refId": "D",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Monitor",
+          "subscription": "$sub",
+          "azureMonitor": {
+            "resources": [
+              {
+                "subscription": "$sub",
+                "resourceGroup": "$platform",
+                "metricNamespace": "microsoft.web/sites",
+                "resourceName": "$beeztable"
+              }
+            ],
+            "metricNamespace": "microsoft.web/sites",
+            "metricName": "HealthCheckStatus",
+            "aggregation": "Average",
+            "timeGrain": "auto",
+            "allowedTimeGrainsMs": [],
+            "dimensionFilters": [],
+            "alias": "BeezTable"
+          }
+        },
+        {
+          "refId": "E",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Monitor",
+          "subscription": "$sub",
+          "azureMonitor": {
+            "resources": [
+              {
+                "subscription": "$sub",
+                "resourceGroup": "$platform",
+                "metricNamespace": "microsoft.web/sites",
+                "resourceName": "$beezorder"
+              }
+            ],
+            "metricNamespace": "microsoft.web/sites",
+            "metricName": "HealthCheckStatus",
+            "aggregation": "Average",
+            "timeGrain": "auto",
+            "allowedTimeGrainsMs": [],
+            "dimensionFilters": [],
+            "alias": "Beez Order"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 12,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "thresholdsStyle": {
+              "mode": "line+area"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "value": null,
+                "color": "red"
+              },
+              {
+                "value": 99,
+                "color": "transparent"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 10,
+      "gridPos": {
+        "x": 8,
+        "y": 5,
+        "w": 16,
+        "h": 4
+      },
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "${ds}"
+      }
+    },
+    {
+      "id": 11,
       "type": "row",
       "title": "Trafic & erreurs par application",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 5,
+        "y": 9,
         "w": 24,
         "h": 1
       },
@@ -837,6 +1246,58 @@
             "dimensionFilters": [],
             "alias": "Click & Collect"
           }
+        },
+        {
+          "refId": "D",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Monitor",
+          "subscription": "$sub",
+          "azureMonitor": {
+            "resources": [
+              {
+                "subscription": "$sub",
+                "resourceGroup": "$platform",
+                "metricNamespace": "microsoft.web/sites",
+                "resourceName": "$beeztable"
+              }
+            ],
+            "metricNamespace": "microsoft.web/sites",
+            "metricName": "Requests",
+            "aggregation": "Total",
+            "timeGrain": "auto",
+            "allowedTimeGrainsMs": [],
+            "dimensionFilters": [],
+            "alias": "BeezTable"
+          }
+        },
+        {
+          "refId": "E",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Monitor",
+          "subscription": "$sub",
+          "azureMonitor": {
+            "resources": [
+              {
+                "subscription": "$sub",
+                "resourceGroup": "$platform",
+                "metricNamespace": "microsoft.web/sites",
+                "resourceName": "$beezorder"
+              }
+            ],
+            "metricNamespace": "microsoft.web/sites",
+            "metricName": "Requests",
+            "aggregation": "Total",
+            "timeGrain": "auto",
+            "allowedTimeGrainsMs": [],
+            "dimensionFilters": [],
+            "alias": "Beez Order"
+          }
         }
       ],
       "fieldConfig": {
@@ -874,10 +1335,10 @@
           "sort": "desc"
         }
       },
-      "id": 9,
+      "id": 12,
       "gridPos": {
         "x": 0,
-        "y": 6,
+        "y": 10,
         "w": 8,
         "h": 8
       },
@@ -968,6 +1429,58 @@
             "dimensionFilters": [],
             "alias": "Click & Collect"
           }
+        },
+        {
+          "refId": "D",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Monitor",
+          "subscription": "$sub",
+          "azureMonitor": {
+            "resources": [
+              {
+                "subscription": "$sub",
+                "resourceGroup": "$platform",
+                "metricNamespace": "microsoft.web/sites",
+                "resourceName": "$beeztable"
+              }
+            ],
+            "metricNamespace": "microsoft.web/sites",
+            "metricName": "Http5xx",
+            "aggregation": "Total",
+            "timeGrain": "auto",
+            "allowedTimeGrainsMs": [],
+            "dimensionFilters": [],
+            "alias": "BeezTable"
+          }
+        },
+        {
+          "refId": "E",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Monitor",
+          "subscription": "$sub",
+          "azureMonitor": {
+            "resources": [
+              {
+                "subscription": "$sub",
+                "resourceGroup": "$platform",
+                "metricNamespace": "microsoft.web/sites",
+                "resourceName": "$beezorder"
+              }
+            ],
+            "metricNamespace": "microsoft.web/sites",
+            "metricName": "Http5xx",
+            "aggregation": "Total",
+            "timeGrain": "auto",
+            "allowedTimeGrainsMs": [],
+            "dimensionFilters": [],
+            "alias": "Beez Order"
+          }
         }
       ],
       "fieldConfig": {
@@ -1005,10 +1518,10 @@
           "sort": "desc"
         }
       },
-      "id": 10,
+      "id": 13,
       "gridPos": {
         "x": 8,
-        "y": 6,
+        "y": 10,
         "w": 8,
         "h": 8
       },
@@ -1099,6 +1612,58 @@
             "dimensionFilters": [],
             "alias": "Click & Collect"
           }
+        },
+        {
+          "refId": "D",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Monitor",
+          "subscription": "$sub",
+          "azureMonitor": {
+            "resources": [
+              {
+                "subscription": "$sub",
+                "resourceGroup": "$platform",
+                "metricNamespace": "microsoft.web/sites",
+                "resourceName": "$beeztable"
+              }
+            ],
+            "metricNamespace": "microsoft.web/sites",
+            "metricName": "Http4xx",
+            "aggregation": "Total",
+            "timeGrain": "auto",
+            "allowedTimeGrainsMs": [],
+            "dimensionFilters": [],
+            "alias": "BeezTable"
+          }
+        },
+        {
+          "refId": "E",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Monitor",
+          "subscription": "$sub",
+          "azureMonitor": {
+            "resources": [
+              {
+                "subscription": "$sub",
+                "resourceGroup": "$platform",
+                "metricNamespace": "microsoft.web/sites",
+                "resourceName": "$beezorder"
+              }
+            ],
+            "metricNamespace": "microsoft.web/sites",
+            "metricName": "Http4xx",
+            "aggregation": "Total",
+            "timeGrain": "auto",
+            "allowedTimeGrainsMs": [],
+            "dimensionFilters": [],
+            "alias": "Beez Order"
+          }
         }
       ],
       "fieldConfig": {
@@ -1136,10 +1701,10 @@
           "sort": "desc"
         }
       },
-      "id": 11,
+      "id": 14,
       "gridPos": {
         "x": 16,
-        "y": 6,
+        "y": 10,
         "w": 8,
         "h": 8
       },
@@ -1230,6 +1795,58 @@
             "dimensionFilters": [],
             "alias": "Click & Collect"
           }
+        },
+        {
+          "refId": "D",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Monitor",
+          "subscription": "$sub",
+          "azureMonitor": {
+            "resources": [
+              {
+                "subscription": "$sub",
+                "resourceGroup": "$platform",
+                "metricNamespace": "microsoft.web/sites",
+                "resourceName": "$beeztable"
+              }
+            ],
+            "metricNamespace": "microsoft.web/sites",
+            "metricName": "HttpResponseTime",
+            "aggregation": "Average",
+            "timeGrain": "auto",
+            "allowedTimeGrainsMs": [],
+            "dimensionFilters": [],
+            "alias": "BeezTable"
+          }
+        },
+        {
+          "refId": "E",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Monitor",
+          "subscription": "$sub",
+          "azureMonitor": {
+            "resources": [
+              {
+                "subscription": "$sub",
+                "resourceGroup": "$platform",
+                "metricNamespace": "microsoft.web/sites",
+                "resourceName": "$beezorder"
+              }
+            ],
+            "metricNamespace": "microsoft.web/sites",
+            "metricName": "HttpResponseTime",
+            "aggregation": "Average",
+            "timeGrain": "auto",
+            "allowedTimeGrainsMs": [],
+            "dimensionFilters": [],
+            "alias": "Beez Order"
+          }
         }
       ],
       "fieldConfig": {
@@ -1283,10 +1900,10 @@
           "sort": "desc"
         }
       },
-      "id": 12,
+      "id": 15,
       "gridPos": {
         "x": 0,
-        "y": 14,
+        "y": 18,
         "w": 12,
         "h": 8
       },
@@ -1377,6 +1994,58 @@
             "dimensionFilters": [],
             "alias": "Click & Collect"
           }
+        },
+        {
+          "refId": "D",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Monitor",
+          "subscription": "$sub",
+          "azureMonitor": {
+            "resources": [
+              {
+                "subscription": "$sub",
+                "resourceGroup": "$platform",
+                "metricNamespace": "microsoft.web/sites",
+                "resourceName": "$beeztable"
+              }
+            ],
+            "metricNamespace": "microsoft.web/sites",
+            "metricName": "MemoryWorkingSet",
+            "aggregation": "Average",
+            "timeGrain": "auto",
+            "allowedTimeGrainsMs": [],
+            "dimensionFilters": [],
+            "alias": "BeezTable"
+          }
+        },
+        {
+          "refId": "E",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "${ds}"
+          },
+          "queryType": "Azure Monitor",
+          "subscription": "$sub",
+          "azureMonitor": {
+            "resources": [
+              {
+                "subscription": "$sub",
+                "resourceGroup": "$platform",
+                "metricNamespace": "microsoft.web/sites",
+                "resourceName": "$beezorder"
+              }
+            ],
+            "metricNamespace": "microsoft.web/sites",
+            "metricName": "MemoryWorkingSet",
+            "aggregation": "Average",
+            "timeGrain": "auto",
+            "allowedTimeGrainsMs": [],
+            "dimensionFilters": [],
+            "alias": "Beez Order"
+          }
         }
       ],
       "fieldConfig": {
@@ -1414,10 +2083,10 @@
           "sort": "desc"
         }
       },
-      "id": 13,
+      "id": 16,
       "gridPos": {
         "x": 12,
-        "y": 14,
+        "y": 18,
         "w": 12,
         "h": 8
       },
@@ -1427,13 +2096,13 @@
       }
     },
     {
-      "id": 14,
+      "id": 17,
       "type": "row",
       "title": "Capacité — App Service Plans",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 22,
+        "y": 26,
         "w": 24,
         "h": 1
       },
@@ -1548,10 +2217,10 @@
           "sort": "desc"
         }
       },
-      "id": 15,
+      "id": 18,
       "gridPos": {
         "x": 0,
-        "y": 23,
+        "y": 27,
         "w": 8,
         "h": 8
       },
@@ -1669,10 +2338,10 @@
           "sort": "desc"
         }
       },
-      "id": 16,
+      "id": 19,
       "gridPos": {
         "x": 8,
-        "y": 23,
+        "y": 27,
         "w": 8,
         "h": 8
       },
@@ -1774,10 +2443,10 @@
           "sort": "desc"
         }
       },
-      "id": 17,
+      "id": 20,
       "gridPos": {
         "x": 16,
-        "y": 23,
+        "y": 27,
         "w": 8,
         "h": 8
       },
@@ -1787,13 +2456,13 @@
       }
     },
     {
-      "id": 18,
+      "id": 21,
       "type": "row",
       "title": "PostgreSQL",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 31,
+        "y": 35,
         "w": 24,
         "h": 1
       },
@@ -1866,10 +2535,10 @@
         },
         "showThresholdMarkers": true
       },
-      "id": 19,
+      "id": 22,
       "gridPos": {
         "x": 0,
-        "y": 32,
+        "y": 36,
         "w": 4,
         "h": 7
       },
@@ -1945,10 +2614,10 @@
         },
         "showThresholdMarkers": true
       },
-      "id": 20,
+      "id": 23,
       "gridPos": {
         "x": 4,
-        "y": 32,
+        "y": 36,
         "w": 4,
         "h": 7
       },
@@ -2024,10 +2693,10 @@
         },
         "showThresholdMarkers": true
       },
-      "id": 21,
+      "id": 24,
       "gridPos": {
         "x": 8,
-        "y": 32,
+        "y": 36,
         "w": 4,
         "h": 7
       },
@@ -2129,10 +2798,10 @@
           "sort": "desc"
         }
       },
-      "id": 22,
+      "id": 25,
       "gridPos": {
         "x": 12,
-        "y": 32,
+        "y": 36,
         "w": 12,
         "h": 7
       },
@@ -2142,13 +2811,13 @@
       }
     },
     {
-      "id": 23,
+      "id": 26,
       "type": "row",
       "title": "Redis (plateformes mutualisées)",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 39,
+        "y": 43,
         "w": 24,
         "h": 1
       },
@@ -2237,10 +2906,10 @@
           "sort": "desc"
         }
       },
-      "id": 24,
+      "id": 27,
       "gridPos": {
         "x": 0,
-        "y": 40,
+        "y": 44,
         "w": 8,
         "h": 7
       },
@@ -2332,10 +3001,10 @@
           "sort": "desc"
         }
       },
-      "id": 25,
+      "id": 28,
       "gridPos": {
         "x": 8,
-        "y": 40,
+        "y": 44,
         "w": 8,
         "h": 7
       },
@@ -2437,10 +3106,10 @@
           "sort": "desc"
         }
       },
-      "id": 26,
+      "id": 29,
       "gridPos": {
         "x": 16,
-        "y": 40,
+        "y": 44,
         "w": 8,
         "h": 7
       },
