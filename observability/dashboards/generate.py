@@ -24,7 +24,12 @@ NS_PLAN = "microsoft.web/serverfarms"
 NS_PG = "microsoft.dbforpostgresql/flexibleservers"
 NS_REDIS = "microsoft.cache/redis"
 
-APPS = [("api", "API"), ("backoffice", "Backoffice"), ("clickcollect", "Click & Collect")]
+# BeezTable / Beez Order exist only on platforms that enable them (module
+# enable_beeztable / enable_beezorder, on by default in Palier 1): their
+# series stay empty elsewhere.
+APPS = [("api", "API"), ("backoffice", "Backoffice"), ("clickcollect", "Click & Collect"),
+        ("beeztable", "BeezTable"), ("beezorder", "Beez Order")]
+REFS = "ABCDEFGH"
 
 
 # ─── Variables ──────────────────────────────────────────────────────────────
@@ -64,7 +69,9 @@ def v_text(name, label, default=""):
 def site_vars():
     return [v_resource("api", "API", NS_SITE, "-api-webapp"),
             v_resource("backoffice", "Backoffice", NS_SITE, "-backoffice-webapp"),
-            v_resource("clickcollect", "Click & Collect", NS_SITE, "-clickandcollect-webapp")]
+            v_resource("clickcollect", "Click & Collect", NS_SITE, "-clickandcollect-webapp"),
+            v_resource("beeztable", "BeezTable", NS_SITE, "-beeztable-webapp"),
+            v_resource("beezorder", "Beez Order", NS_SITE, "-beezorder-webapp")]
 
 
 # ─── Targets ────────────────────────────────────────────────────────────────
@@ -219,18 +226,27 @@ def platform_overview():
                desc="100 % = toutes les instances répondent au health check"), 4, 4)
     L.add(stat("Backoffice · erreurs 5xx", [metric("A", NS_SITE, "backoffice", "Http5xx", "Total")], th=red_5xx), 4, 4)
     L.add(stat("Click & Collect · erreurs 5xx", [metric("A", NS_SITE, "clickcollect", "Http5xx", "Total")], th=red_5xx), 4, 4)
+    L.add(stat("BeezTable · erreurs 5xx", [metric("A", NS_SITE, "beeztable", "Http5xx", "Total")], th=red_5xx), 4, 4)
+    L.add(stat("Beez Order · erreurs 5xx", [metric("A", NS_SITE, "beezorder", "Http5xx", "Total")], th=red_5xx), 4, 4)
+    # Azure-native take on the "App Services UP" panel of the per-platform
+    # Grafana VM (Dorsaf, feat(monitoring) branch): App Service health check
+    # instead of a Prometheus blackbox probe — no VM, no scraping.
+    L.add(ts("Disponibilité des applications (health check)",
+             [metric(r, NS_SITE, v, "HealthCheckStatus", "Average", label) for r, (v, label) in zip(REFS, APPS)],
+             unit="percent", th=thresholds((None, "red"), (99, "transparent")),
+             desc="100 % = toutes les instances de l'application répondent au health check (health_check_path)"), 16, 4)
 
     L.row("Trafic & erreurs par application")
-    L.add(ts("Requêtes", [metric(r, NS_SITE, v, "Requests", "Total", label) for r, (v, label) in zip("ABC", APPS)]), 8, 8)
-    L.add(ts("Erreurs HTTP 5xx", [metric(r, NS_SITE, v, "Http5xx", "Total", label) for r, (v, label) in zip("ABC", APPS)],
+    L.add(ts("Requêtes", [metric(r, NS_SITE, v, "Requests", "Total", label) for r, (v, label) in zip(REFS, APPS)]), 8, 8)
+    L.add(ts("Erreurs HTTP 5xx", [metric(r, NS_SITE, v, "Http5xx", "Total", label) for r, (v, label) in zip(REFS, APPS)],
              draw="bars"), 8, 8)
-    L.add(ts("Erreurs HTTP 4xx", [metric(r, NS_SITE, v, "Http4xx", "Total", label) for r, (v, label) in zip("ABC", APPS)],
+    L.add(ts("Erreurs HTTP 4xx", [metric(r, NS_SITE, v, "Http4xx", "Total", label) for r, (v, label) in zip(REFS, APPS)],
              draw="bars"), 8, 8)
     L.add(ts("Temps de réponse moyen", [metric(r, NS_SITE, v, "HttpResponseTime", "Average", label)
-                                         for r, (v, label) in zip("ABC", APPS)], unit="s",
+                                         for r, (v, label) in zip(REFS, APPS)], unit="s",
              th=thresholds((None, "transparent"), (2, "red"))), 12, 8)
     L.add(ts("Mémoire (working set)", [metric(r, NS_SITE, v, "MemoryWorkingSet", "Average", label)
-                                        for r, (v, label) in zip("ABC", APPS)], unit="bytes"), 12, 8)
+                                        for r, (v, label) in zip(REFS, APPS)], unit="bytes"), 12, 8)
 
     L.row("Capacité — App Service Plans")
     plans = [("backendplan", "Plan backend"), ("frontendplan", "Plan frontend")]
